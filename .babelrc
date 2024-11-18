@@ -1,10 +1,24 @@
 {
-    "presets": [
-        "@babel/env",
-        "@babel/typescript"
-    ],
-    "plugins": [
+  "presets": [
+    ["@babel/preset-env", {
+      "targets": {
+        "node": "current"
+      },
+      "modules": false,
+      "loose": true,
+      "exclude": [
+        "transform-modules-commonjs", 
+        "transform-regenerator", 
+        "transform-async-to-generator",
+        "@babel/plugin-transform-for-of"
+      ]
+    }],
+    "@babel/preset-typescript"
+  ],
+  "plugins": ["./macro-plugin",
+        "./devportal-compat-plugin",
         "@babel/proposal-class-properties",
         "@babel/proposal-object-rest-spread"
-    ]
+      ],
+  "sourceType": "module"
 }
