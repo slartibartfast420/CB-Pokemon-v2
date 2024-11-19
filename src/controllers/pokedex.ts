@@ -1,3 +1,4 @@
+import {$settings} from "../api/$settings";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
 import { Rarity } from "../models/pokemon/rarity";
 
@@ -35,13 +36,13 @@ export default class PokeDex {
     public static GetRandomPokemon(tipAmount = 0): number {
         let rarity = Rarity.Common;
 
-        if (tipAmount >= cb.settings.mystic_tip) {
+        if (tipAmount >= $settings.mystic_tip) {
             rarity = Rarity.Mystic;
-        } else if (tipAmount >= cb.settings.legendary_tip) {
+        } else if (tipAmount >= $settings.legendary_tip) {
             rarity = Rarity.Legendary;
-        } else if (tipAmount >= cb.settings.rare_tip) {
+        } else if (tipAmount >= $settings.rare_tip) {
             rarity = Rarity.Rare;
-        } else if (tipAmount >= cb.settings.uncommon_tip) {
+        } else if (tipAmount >= $settings.uncommon_tip) {
             rarity = Rarity.Uncommon;
         }
 

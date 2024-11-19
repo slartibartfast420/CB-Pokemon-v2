@@ -1,3 +1,5 @@
+import {$user,User} from "../api/$user";
+
 type Claim = "IS_DEV" | "IS_BROADCASTER" | "IS_MOD" | "IS_HELPER" | "IN_FANCLUB" | "HAS_TOKEN" | "";
 type PermissionLevel = "DEV" | "MOD" | "SUPERUSER" | "USER";
 
@@ -9,43 +11,43 @@ export default class AccessControl {
         private helpers: string[],
     ) {}
 
-    public hasClaim(origin: message | user, claim: Claim): boolean {
-        return this.getClaims(origin).includes(claim);
+    public hasClaim($user: User, claim: Claim): boolean {
+        return this.getClaims($user).includes(claim);
     }
 
-    public getClaims(origin: message | user): Claim[] {
+    public getClaims($user: User): Claim[] {
         const claims: Claim[] = [];
 
-        if (origin.user === this.dev) {
+        if ($user.username === this.dev) {
             claims.push("IS_DEV");
         }
 
-        if (origin.user === cb.room_slug) {
+        if ($user.isOwner) {
             claims.push("IS_BROADCASTER");
         }
 
-        if (this.helpers.includes(origin.user)) {
+        if (this.helpers.includes($user.username)) {
             claims.push("IS_HELPER");
         }
 
-        if (origin.is_mod) {
+        if ($user.isMod) {
             claims.push("IS_MOD");
         }
 
-        if (origin.in_fanclub) {
+        if ($user.inFanclub) {
             claims.push("IN_FANCLUB");
         }
 
         return claims;
     }
 
-    public hasPermission(origin: message | user, permission: PermissionLevel): boolean {
-        if (this.hasClaim(origin, "IS_DEV")) {
+    public hasPermission($user: User, permission: PermissionLevel): boolean {
+        if (this.hasClaim($user, "IS_DEV")) {
             return true;
         }
 
         const hasAnyClaim = (claims: Claim[]): boolean => {
-            if (this.getClaims(origin).some((claim) => (claims.includes(claim)))) {
+            if (this.getClaims($user).some((claim) => (claims.includes(claim)))) {
                 return true;
             }
             return false;

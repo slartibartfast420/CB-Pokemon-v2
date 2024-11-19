@@ -1,4 +1,7 @@
-import { Pokemons } from "../models/pokemon/pokemon";
+import {$settings} from "../api/$settings";
+import {$room} from "../api/$room";
+
+import { Pokemons } from "../../old_src/src/models/pokemon/pokemon";
 import Messenger from "./messenger";
 import PokeDex from "./pokedex";
 
@@ -11,12 +14,8 @@ export default class Banner {
                             '/release' to remove your Pokemon :(...
                             Prices:\n`;
 
-    constructor() {
-        cb.setTimeout(() => this.sendBanner(undefined, true), cb.settings.banner_rotate * 1000);
-    }
-
-    public sendBanner(user?: string, rotate?: boolean): void {
-        const tempPrices = [cb.settings.catch_pokemon, cb.settings.uncommon_tip, cb.settings.rare_tip, cb.settings.legendary_tip, cb.settings.mystic_tip];
+    public sendBanner(user?: string): void {
+        const tempPrices = [$settings.catch_pokemon, $settings.uncommon_tip, $settings.rare_tip, $settings.legendary_tip, $settings.mystic_tip];
         let pricesMessage = "";
 
         for (const price of tempPrices) {
@@ -24,10 +23,10 @@ export default class Banner {
             pricesMessage += `:pkmnball Catch ${pkmn.Rariry.toString()} for ${price} Tokens! ${PokeDex.GetPokemonIcon(pkmn)}\n`;
         }
 
-        Messenger.sendInfoMessage(this.startMessage + pricesMessage + "Let the Battles Begin!", user);
-
-        if (rotate !== undefined && rotate) {
-            cb.setTimeout(() => this.sendBanner(user, rotate), cb.settings.banner_rotate * 1000);
+        if (user !== undefined){
+            $room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!", { toUsername: user} );
+        } else {
+            $room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!");
         }
     }
 

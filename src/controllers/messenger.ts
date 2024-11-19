@@ -1,6 +1,8 @@
+import {$room} from "../api/$room";
+
 import { MsgColors } from "../misc/colors";
 import { Groups } from "../misc/groups";
-import { Pokemons } from "../models/pokemon/pokemon";
+import { Pokemons } from "../../old_src/src/models/pokemon/pokemon";
 
 export default class Messenger {
 
@@ -12,7 +14,7 @@ export default class Messenger {
         }
 
         const welcomeMsg = `:pkmnoak Hello there, ${name}! Welcome to the world of Chaturbate!
-                            Here you will find ${cb.room_slug}'s room is inhabited by creatures called Pokemon!
+                            Here you will find ${$room.owner}'s room is inhabited by creatures called Pokemon!
                             The number of registered Pokemon in the Pokedex is currently at ${Pokemons.length - 1}
                             There are still more Pokemon are waiting to be discovered.
                             Keep an eye out for them in the future!`;
@@ -28,7 +30,7 @@ export default class Messenger {
     }
 
     public static sendBroadcasterNotice(message: string): void {
-        this.sendMessageToUser(message, cb.room_slug, MsgColors.Yellow, MsgColors.Purple);
+        this.sendMessageToUser(message, $room.owner, MsgColors.Yellow, MsgColors.Purple);
     }
 
     public static sendErrorMessage(message: string, user?: string, group?: Groups) {
@@ -51,6 +53,6 @@ export default class Messenger {
         if (weight === undefined) {
             weight = "bold";
         }
-        cb.sendNotice(message, user, background as string, foreground as string, weight, group as group);
+        $room.sendNotice(message, { toUsername: user, bgColor: background as string, color: foreground as string, fontWeight: weight, toColorGroup: group as group});
     }
 }
