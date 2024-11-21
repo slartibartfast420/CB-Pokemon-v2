@@ -1,4 +1,4 @@
-import { Colors, MsgColors } from "../../../../src/misc/colors";
+import { Colors, MsgColors } from "../../misc/colors";
 import { EvoStones } from "./evostones";
 
 export class Type {

@@ -1,12 +1,12 @@
-import {$room} from "../api/$room";
+import {$room, Room} from "../api/$room";
 
 import { MsgColors } from "../misc/colors";
 import { Groups } from "../misc/groups";
-import { Pokemons } from "../../old_src/src/models/pokemon/pokemon";
+import { Pokemons } from "../models/pokemon/pokemon";
 
 export default class Messenger {
 
-    public static sendWelcomeMessage(user?: string) {
+    public static sendWelcomeMessage($room : Room, user?: string) {
         let name = "trainer";
 
         if (user !== undefined) {
@@ -18,41 +18,43 @@ export default class Messenger {
                             The number of registered Pokemon in the Pokedex is currently at ${Pokemons.length - 1}
                             There are still more Pokemon are waiting to be discovered.
                             Keep an eye out for them in the future!`;
-        this.sendInfoMessage(welcomeMsg, user);
+        this.sendInfoMessage($room, welcomeMsg, user);
     }
 
-    public static sendMessageToUser(message: string, user: string, background?: MsgColors, foreground?: MsgColors) {
-        this.sendMessage(message, user, background, foreground);
+    public static sendMessageToUser($room : Room, message: string, user: string, background?: MsgColors, foreground?: MsgColors) {
+        this.sendMessage($room, message, user, background, foreground);
     }
 
-    public static sendMessageToGroup(message: string, group: Groups, background?: MsgColors, foreground?: MsgColors) {
-        this.sendMessage(message, undefined, background, foreground, undefined, group);
+    public static sendMessageToGroup($room : Room, message: string, group: Groups, background?: MsgColors, foreground?: MsgColors) {
+        this.sendMessage($room, message, undefined, background, foreground, group);
     }
 
-    public static sendBroadcasterNotice(message: string): void {
-        this.sendMessageToUser(message, $room.owner, MsgColors.Yellow, MsgColors.Purple);
+    public static sendBroadcasterNotice($room : Room, message: string): void {
+        this.sendMessageToUser($room, message, $room.owner, MsgColors.Yellow, MsgColors.Purple);
     }
 
-    public static sendErrorMessage(message: string, user?: string, group?: Groups) {
-        this.sendMessage(message, user, undefined, MsgColors.Red, undefined, group);
+    public static sendErrorMessage($room : Room, message: string, user?: string, group?: Groups) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Red, group);
     }
 
-    public static sendWarningMessage(message: string, user?: string, group?: Groups) {
-        this.sendMessage(message, user, undefined, MsgColors.Orange, undefined, group);
+    public static sendWarningMessage($room : Room, message: string, user?: string, group?: Groups) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Orange, group);
     }
 
-    public static sendSuccessMessage(message: string, user?: string, group?: Groups) {
-        this.sendMessage(message, user, undefined, MsgColors.Green, undefined, group);
+    public static sendSuccessMessage($room : Room, message: string, user?: string, group?: Groups) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Green, group);
     }
 
-    public static sendInfoMessage(message: string, user?: string, group?: Groups) {
-        this.sendMessage(message, user, undefined, MsgColors.Black, undefined, group);
+    public static sendInfoMessage($room : Room, message: string, user?: string, group?: Groups) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Black, group);
     }
 
-    private static sendMessage(message: string, user?: string, background?: MsgColors, foreground?: MsgColors, weight?: weight, group?: Groups) {
-        if (weight === undefined) {
-            weight = "bold";
+    private static sendMessage($room : Room, message: string, user?: string, background?: MsgColors, foreground?: MsgColors, group?: Groups) {
+        if($room.sendNotice){
+            $room.sendNotice(message, { toUsername: user, bgColor: background as string, color: foreground as string, fontWeight: "bold"});
+        } else{
+            console.log(message);
         }
-        $room.sendNotice(message, { toUsername: user, bgColor: background as string, color: foreground as string, fontWeight: weight, toColorGroup: group as group});
+        
     }
 }

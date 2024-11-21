@@ -1,4 +1,4 @@
-import {$user,User} from "../api/$user";
+import {User} from "../api/$user";
 
 type Claim = "IS_DEV" | "IS_BROADCASTER" | "IS_MOD" | "IS_HELPER" | "IN_FANCLUB" | "HAS_TOKEN" | "";
 type PermissionLevel = "DEV" | "MOD" | "SUPERUSER" | "USER";

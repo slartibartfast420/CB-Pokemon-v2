@@ -3,6 +3,6 @@
     "module": "CommonJS",
     "target": "ES6",
     "esModuleInterop": true,
-    "outDir": "tmp"
+    "outDir": "temp"
   }
 }

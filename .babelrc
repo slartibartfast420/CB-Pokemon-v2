@@ -16,9 +16,7 @@
     "@babel/preset-typescript"
   ],
   "plugins": ["./macro-plugin",
-        "./devportal-compat-plugin",
-        "@babel/proposal-class-properties",
-        "@babel/proposal-object-rest-spread"
+        "./devportal-compat-plugin"
       ],
   "sourceType": "module"
 }

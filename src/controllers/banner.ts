@@ -1,12 +1,17 @@
 import {$settings} from "../api/$settings";
-import {$room} from "../api/$room";
+import {$room, Room} from "../api/$room";
 
-import { Pokemons } from "../../old_src/src/models/pokemon/pokemon";
+import { Pokemons } from "../models/pokemon/pokemon";
 import Messenger from "./messenger";
 import PokeDex from "./pokedex";
 
 export default class Banner {
-
+    private room : Room;
+    
+    constructor(public $room: Room) {
+           this.room = $room;
+        }
+    
     private startMessage =  `Pokemon - Gotta Catch 'Em All (with Tokens :P)!
                             '/level <username>' to see a Pokemon's level.
                             '/identify <username>' uses the Pokedex.
@@ -24,14 +29,14 @@ export default class Banner {
         }
 
         if (user !== undefined){
-            $room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!", { toUsername: user} );
+            this.room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!", { toUsername: user} );
         } else {
-            $room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!");
+            this.room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!");
         }
     }
 
     public sendWelcomeAndBannerMessage(user?: string) {
-        Messenger.sendWelcomeMessage(user);
+        Messenger.sendWelcomeMessage(this.room, user);
         this.sendBanner(user);
     }
 }
