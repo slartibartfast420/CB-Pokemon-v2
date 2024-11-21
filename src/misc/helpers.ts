@@ -1,16 +1,14 @@
-import {$settings} from "../api/$settings";
-import {$room} from "../api/$room";
-
 /**
  * Checks if user has super user rights within the app/bot.
  * @param user username
  * @param isMod boolean is mod, check against allow mod setting
  */
-export function isSuperuser(user: string, owner: string, isMod: boolean) {
-    return (user === owner || (isMod && $settings.allow_mod_superuser_cmd === true));
+export function isSuperuser(user: string, owner: string, isMod: boolean, mod_allow_broadcaster_cmd: boolean) {
+    return (user === owner || (isMod && mod_allow_broadcaster_cmd));
 }
 
 export function isDevOrHelper(user: string, list: string[]) {
+    console.log(`Test list: ${list}`);
     return list.includes(user);
 }
 
@@ -29,6 +27,3 @@ export function customStringify(v: any) {
     });
 }
 
-export function parseBoolean(str: string): boolean {
-        return (str === "Yes");
-}

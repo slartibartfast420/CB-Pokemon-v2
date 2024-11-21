@@ -4,10 +4,8 @@ import {Tip} from "../api/$tip";
 import {Settings} from "../api/$settings";
 import {SettingsObj} from "../misc/settingsobj";
 import {Room} from "../api/$room";
-
 import {customStringify} from "../misc/helpers";
 import {Pokemons} from "../models/pokemon/pokemon";
-import PokemonTrainerDTO from "../models/trainerDTO";
 import AccessControl from "./accesscontrol";
 import Banner from "./banner";
 import Messenger from "./messenger";
@@ -18,27 +16,14 @@ export default class Game {
     public settings: SettingsObj;
     public banner: Banner;
     public room: Room;
-    public trainerManager: TrainerManager;
-    public allow_mod_superuser_cmd : Boolean;
+    private trainerManager: TrainerManager;
+    private pokeDex : PokeDex;
 
-    private readonly accessControl: AccessControl;
+    private accessControl: AccessControl;
 
-    constructor(public config: any, $room: Room) {
-        this.banner = new Banner($room);
-        this.trainerManager = new TrainerManager($room);
-        this.room = $room;
+    constructor(public config: any) {
         this.settings = new SettingsObj();
-
-        if (config !== undefined) {
-            this.accessControl = new AccessControl(this.config.allow_mod_superuser_cmd, this.config.Dev, this.config.FairyHelper);
-
-            Messenger.sendSuccessMessage(this.room, "Pokemon - Gotta Catch 'Em All v" + this.config.Version + " started.");
-            Messenger.sendBroadcasterNotice(this.room, "This Pokemon Bot is in beta. It can not become better if I do not know what is wrong. Please comment on the bot's page any errors or questions. Make sure to check out the original Version (PokeDex) of asudem! Thank you.");
-
-            this.initBroadcaster($room);
-        } else {
-            this.accessControl = new AccessControl(this.config.allow_mod_superuser_cmd, "", []);
-        }
+        this.pokeDex = new PokeDex(this.settings);
     }
 
     //#region OnEnter Functions
@@ -59,7 +44,7 @@ export default class Game {
 
     public addFreebiePokemonToFanclub($user: User) {
         if (this.settings.fanclub_auto_catch && this.accessControl.hasClaim($user, "IN_FANCLUB") && !this.trainerManager.PokemonTrainers.has($user.username)) {
-            this.trainerManager.AddPokemonToTrainer(PokeDex.GetRandomPokemon(), $user.username, 0);
+            this.trainerManager.AddPokemonToTrainer(this.pokeDex.GetRandomPokemon(), $user.username, 0);
         }
     }
     //#endregion
@@ -69,7 +54,11 @@ export default class Game {
         if ($message.orig.trim().startsWith(":") && $message.orig.indexOf("/") > -1) {
             const splitMsg = $message.orig.split(" ");
             if (splitMsg[1].indexOf("/") === 0) {
-                $message.setBody($message.orig.trim().substring($message.orig.indexOf("/"), $message.orig.length).trim());
+                if($message.setBody){
+                    $message.setBody($message.orig.trim().substring($message.orig.indexOf("/"), $message.orig.length).trim());
+                } else {
+                    console.log($message.orig.trim().substring($message.orig.indexOf("/"), $message.orig.length).trim())
+                }
             }
         }
 
@@ -82,10 +71,12 @@ export default class Game {
         }
 
         /* If it starts with the prefix, suppress that shit and assume it's a command */
-        $message.setSpam(true);
-        $message.setColor("#FFFFFF");
-        $message.setBgColor("#E7E7E7");
-
+        if($message.setBody){
+            $message.setSpam(true);
+            $message.setColor("#FFFFFF");
+            $message.setBgColor("#E7E7E7");
+        }
+        
         const args = $message.orig.slice(this.config.Prefix.length).trim().split(/ +/g);
         let command = args.shift();
         if (command === undefined) {
@@ -97,12 +88,16 @@ export default class Game {
         if (this.accessControl.hasPermission($user, "MOD")) {
             /* Broadcaster only commands at all times */
             if (command === this.config.CMDS.SUPPORT) {
-                this.allow_mod_superuser_cmd = !this.allow_mod_superuser_cmd;
-                Messenger.sendSuccessMessage(this.room, "Support mode for Pokedex bot Ver." + this.config.Version + " is now " + (this.allow_mod_superuser_cmd ? "ACTIVATED" : "DEACTIVATED") + "!", this.room.owner);
+                this.settings.mod_allow_broadcaster_cmd = !this.settings.mod_allow_broadcaster_cmd;
+                Messenger.sendSuccessMessage(this.room, "Support mode for Pokedex bot Ver." + this.config.Version + " is now " + (this.settings.mod_allow_broadcaster_cmd ? "ACTIVATED" : "DEACTIVATED") + "!", this.room.owner);
             }
         }
 
+        // if (!this.accessControl.hasPermission($user, "SUPERUSER")){
+        //     console.log(`unauthorized ${JSON.stringify($user)}`);
+        // }
         if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            console.log("authorized");
             switch (command) {
                 case this.config.CMDS.ADDUSER: {
                     const [targetUser, pokedexNumberString] = args;
@@ -110,7 +105,7 @@ export default class Game {
                     if (pokedexNumber <= Pokemons.length && pokedexNumber >= 0) {
                         this.trainerManager.AddPokemonToTrainer(pokedexNumber, targetUser, 0);
                         const pkmn = this.trainerManager.PokemonTrainers.get(targetUser)!.Pokemon;
-                        Messenger.sendInfoMessage(this.room, `${PokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name} was given to ${targetUser}`);
+                        Messenger.sendInfoMessage(this.room, `${this.pokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name} was given to ${targetUser}`);
                     }
                     break;
                 }
@@ -153,18 +148,21 @@ export default class Game {
                     this.banner.sendWelcomeAndBannerMessage(user);
                     break;
                 }
-                case this.config.CMDS.EXPORT: {
-                    const exportdata = this.trainerManager.ExportToDTO();
-                    Messenger.sendSuccessMessage(this.room, JSON.stringify(exportdata), $user.username);
-                    break;
-                }
-                case this.config.CMDS.IMPORT: {
-                    const json = args.join(" ");
-                    const importdata: PokemonTrainerDTO[] = JSON.parse(json);
-                    this.trainerManager.ImportFromDTO(importdata);
-                    break;
-                }
+                // case this.config.CMDS.EXPORT: {
+                //     const exportdata = this.trainerManager.ExportToDTO();
+                //     Messenger.sendSuccessMessage(this.room, JSON.stringify(exportdata), $user.username);
+                //     break;
+                // }
+                // case this.config.CMDS.IMPORT: {
+                //     const json = args.join(" ");
+                //     const importdata: PokemonTrainerDTO[] = JSON.parse(json);
+                //     this.trainerManager.ImportFromDTO(importdata);
+                //     break;
+                // }
             }
+        // } else {
+        //     Messenger.sendErrorMessage(this.room, "Permission Denied", $user.username);
+        //TODO Make it give errors for unauthorized commands
         }
 
         switch (command) {
@@ -185,7 +183,7 @@ export default class Game {
                 const [targetUser] = args;
                 try {
                     if (this.trainerManager.PokemonTrainers.has(targetUser)) {
-                        Messenger.sendMessageToUser(this.room, PokeDex.IdentifyPokemon(this.trainerManager.PokemonTrainers.get(targetUser)!.Pokemon), $user.username);
+                        Messenger.sendMessageToUser(this.room, this.pokeDex.IdentifyPokemon(this.trainerManager.PokemonTrainers.get(targetUser)!.Pokemon), $user.username);
                     } else if (targetUser === "" || targetUser === undefined) {
                         Messenger.sendErrorMessage(this.room, "USAGE: '/identify <user>' where <user> should be the name of the user who's Pokemon you want to identify.", $user.username);
                     } else {
@@ -197,7 +195,13 @@ export default class Game {
                 break;
             }
             case this.config.CMDS.BUYSTONE: {
+                if(!this.trainerManager.PokemonTrainers.has($user.username)){
+                    Messenger.sendErrorMessage(this.room, "You don't have a Pokemon.", $user.username);
+                    break;
+                }
+
                 if (this.trainerManager.PokemonTrainers.has($user.username) && this.trainerManager.PokemonTrainers.get($user.username)!.Pokemon.UsesStone) {
+                    //console.log(this.trainerManager.PokemonTrainers.get($user.username));
                     if (this.trainerManager.PokemonTrainers.get($user.username)!.BuyStoneWarning === true) {
                         if ($user.username === this.room.owner) {
                             this.trainerManager.PokemonTrainers.get($user.username)!.BuyStoneWarning = false;
@@ -361,6 +365,7 @@ export default class Game {
                         Messenger.sendErrorMessage(this.room, "You need a Pokemon yourself first, before you can go into the wild and randomly attack other players my friend.", $user.username);
                     }
                 } else {
+                    Messenger.sendErrorMessage(this.room, "This user either is not in this room or does not have a pokemon to attack.", $user.username);
                     Messenger.sendErrorMessage(this.room, "USAGE: '/attack <user> where <user> should be the name of the user who you want to fight with.", $user.username);
                 }
                 break;
@@ -386,7 +391,7 @@ export default class Game {
 
     public addFreebiePokemon($user: User): User {
         if (this.settings.catch_pokemon === 0 && !this.trainerManager.PokemonTrainers.has($user.username)) {
-            this.trainerManager.AddPokemonToTrainer(PokeDex.GetRandomPokemon(), $user.username, 0);
+            this.trainerManager.AddPokemonToTrainer(this.pokeDex.GetRandomPokemon(), $user.username, 0);
         }
         return $user;
     }
@@ -394,7 +399,7 @@ export default class Game {
     public addPokemonFlair($message: Message, $user: User): Message {
         if (this.trainerManager.PokemonTrainers.has($user.username) && !$message.isSpam) {
             const pokemon = this.trainerManager.PokemonTrainers.get($user.username)!.Pokemon;
-            $message.orig = PokeDex.GetPokemonIcon(pokemon) + " " + $message.orig;
+            $message.orig = this.pokeDex.GetPokemonIcon(pokemon) + " " + $message.orig;
 
             if (this.settings.colorize_chat) {
                 $message.color = pokemon.Types[0].FontColor;
@@ -413,9 +418,9 @@ export default class Game {
     //#region OnTip Functions
     public purchaseObjects($user: User, $tip: Tip) {
         if (!this.trainerManager.PokemonTrainers.has($user.username) && this.settings.catch_pokemon <= $tip.tokens) {
-            this.trainerManager.AddPokemonToTrainer(PokeDex.GetRandomPokemon($tip.tokens), $user.username, $tip.tokens);
+            this.trainerManager.AddPokemonToTrainer(this.pokeDex.GetRandomPokemon($tip.tokens), $user.username, $tip.tokens);
             const pkmn = this.trainerManager.PokemonTrainers.get($user.username)!.Pokemon;
-            Messenger.sendInfoMessage(this.room, `You successfully caught a ${PokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name}, congrats! Treat it well, fellow trainer.`);
+            Messenger.sendInfoMessage(this.room, `You successfully caught a ${this.pokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name}, congrats! Treat it well, fellow trainer.`);
         } else if (this.trainerManager.PokemonTrainers.has($user.username) && this.trainerManager.PokemonTrainers.get($user.username)!.BuyStoneConfirmation === true) {
             if ($tip.tokens === this.settings.stone_price) {
                 Messenger.sendInfoMessage(this.room, "You just purchased a " + this.trainerManager.PokemonTrainers.get($user.username)!.Pokemon.Types[0].Stone + "!", $user.username);
@@ -433,17 +438,30 @@ export default class Game {
         }
     }
     public setSettings($settings: Settings){
-        this.initCBSettings($settings);
-    }
-
-    private initCBSettings($settings: Settings) {
         if ($settings) {
             Object.assign(this.settings, $settings);
           }
-       
-    } 
+          //TODO reset settings for Banner
+          //TODO reset settings for Pokedex
+          //TODO reset settings for AccessControl
+    }
+    public setBroadcaster($room: Room){
+        if (this.settings.mod_allow_broadcaster_cmd) {
+            this.accessControl = new AccessControl(this.config.mod_allow_broadcaster_cmd, this.config.Dev, this.config.FairyHelper);
+        } else {
+            this.accessControl = new AccessControl(this.config.mod_allow_broadcaster_cmd, "", []);
+        }
+        this.banner = new Banner($room,this.settings,this.pokeDex);
+        this.trainerManager = new TrainerManager($room,this.settings);
+
+        this.initBroadcaster($room);
+        Messenger.sendSuccessMessage(this.room, "Pokemon - Gotta Catch 'Em All v" + this.config.Version + " started.");
+        Messenger.sendBroadcasterNotice(this.room, "This Pokemon Bot is in beta. It can not become better if I do not know what is wrong. Please comment on the bot's page any errors or questions. Make sure to check out the original Version (PokeDex) of asudem! Thank you.");
+
+    }
 
     private initBroadcaster($room: Room) {
+        this.room=$room;
         if (this.settings.broadcaster_pokemon !== 0) {
             this.trainerManager.AddPokemonToTrainer(this.settings.broadcaster_pokemon, $room.owner, 0);
             if (this.trainerManager.PokemonTrainers.has($room.owner)) {

@@ -6,7 +6,6 @@ rm -rf dist
 # Compiling each file listed in apiFiles.txt
 files=(
     "sharedCode"
-    "api"
     "appSettingsChange"
     "appStart"
     "appStop"

@@ -1,15 +1,18 @@
-import {$settings} from "../api/$settings";
-import {$room, Room} from "../api/$room";
-
+import {Room} from "../api/$room";
 import { Pokemons } from "../models/pokemon/pokemon";
 import Messenger from "./messenger";
 import PokeDex from "./pokedex";
+import { SettingsObj } from "../misc/settingsobj";
 
 export default class Banner {
     private room : Room;
-    
-    constructor(public $room: Room) {
+    private settings : SettingsObj;
+    private pokeDex : PokeDex;
+
+    constructor(public $room: Room, settingsObj: SettingsObj, pokeDex : PokeDex) {
            this.room = $room;
+           this.settings = settingsObj;
+           this.pokeDex = pokeDex;
         }
     
     private startMessage =  `Pokemon - Gotta Catch 'Em All (with Tokens :P)!
@@ -20,18 +23,27 @@ export default class Banner {
                             Prices:\n`;
 
     public sendBanner(user?: string): void {
-        const tempPrices = [$settings.catch_pokemon, $settings.uncommon_tip, $settings.rare_tip, $settings.legendary_tip, $settings.mystic_tip];
+        const tempPrices = [this.settings.catch_pokemon, this.settings.uncommon_tip, this.settings.rare_tip, this.settings.legendary_tip, this.settings.mystic_tip];
         let pricesMessage = "";
 
         for (const price of tempPrices) {
-            const pkmn = Pokemons[PokeDex.GetRandomPokemon(parseInt(price, 10))];
-            pricesMessage += `:pkmnball Catch ${pkmn.Rariry.toString()} for ${price} Tokens! ${PokeDex.GetPokemonIcon(pkmn)}\n`;
+            const pkmn = Pokemons[this.pokeDex.GetRandomPokemon(price)];
+            pricesMessage += `:pkmnball Catch ${pkmn.Rariry.toString()} for ${price} Tokens! ${this.pokeDex.GetPokemonIcon(pkmn)}\n`;
         }
 
         if (user !== undefined){
-            this.room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!", { toUsername: user} );
+            if (this.room.sendNotice){
+                this.room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!", { toUsername: user} );
+            } else {
+                console.log(this.startMessage + pricesMessage + "Let the Battles Begin!")
+            }
+            
         } else {
-            this.room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!");
+            if (this.room.sendNotice){
+                this.room.sendNotice(this.startMessage + pricesMessage + "Let the Battles Begin!");
+            } else{
+                console.log(this.startMessage + pricesMessage + "Let the Battles Begin!")
+            }
         }
     }
 

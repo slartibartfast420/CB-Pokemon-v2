@@ -5,10 +5,10 @@
 //import {$limitcam} from "./api/$limitcam";
 //import {$media} from "./api/$media";
 // {$message} from "./api/$message";
-import {$room} from "./api/$room";
+//import {$room} from "./api/$room";
 //import {$tip} from "./api/$tip";
 //import {$user} from "./api/$user";
-import {$settings} from "./api/$settings";
+//import {$settings} from "./api/$settings";
 
 /** Contains all the shared code for all event handlers */
 import Game from "./controllers/game";
@@ -42,5 +42,4 @@ const App = {
         DECLINE: "-decline",
     },
 };
-
-export const game = new Game(App, $room);
+export const game = new Game(App);

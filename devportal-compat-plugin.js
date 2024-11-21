@@ -100,8 +100,7 @@ module.exports = function (babel) {
                         const fullInlinedContent = inlineFileContent(importPath, state.file.opts.filename);
 
                         if (fullInlinedContent && fullInlinedContent.length > 0) {
-                            const importedNames = inlineImport.path.node.specifiers.map(specifier => specifier.imported.name);
-
+                            const importedNames = inlineImport.path.node.specifiers.map(specifier => specifier.local.name);
                             if (!inlinedPartsFromModules.has(importPath)) {
                                 inlinedPartsFromModules.set(importPath, new Set());
                             }
@@ -110,15 +109,19 @@ module.exports = function (babel) {
                             const partsToInline = importedNames.filter(name => !alreadyInlinedParts.has(name));
 
                             if (partsToInline.length > 0) {
-                                const relevantInlinedContent = fullInlinedContent.filter(node => {
-                                    if (t.isVariableDeclaration(node)) {
-                                        return node.declarations.some(declaration => partsToInline.includes(declaration.id.name));
-                                    } else if (t.isFunctionDeclaration(node) || t.isClassDeclaration(node)) {
-                                        return partsToInline.includes(node.id.name);
-                                    }
-                                    return false;
-                                });
-
+                                // const relevantInlinedContent = fullInlinedContent.filter(node => {
+                                //     console.log(node)
+                                //     if (t.isVariableDeclaration(node)) {
+                                //         console.log(node.declarations)
+                                //         return node.declarations.some(declaration => partsToInline.includes(declaration.id.name));
+                                //     } else if (t.isFunctionDeclaration(node) || t.isClassDeclaration(node)) {
+                                //         console.log(node.id)
+                                //         return partsToInline.includes(node.id.name);
+                                //     }
+                                //     return false;
+                                // });
+                                var relevantInlinedContent = fullInlinedContent
+                                console.log(relevantInlinedContent)
                                 const filename = nodePath.basename(importPath).replace(/\./g, "_");
 
                                 const nameMapping = {};

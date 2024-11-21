@@ -4,12 +4,19 @@ type Claim = "IS_DEV" | "IS_BROADCASTER" | "IS_MOD" | "IS_HELPER" | "IN_FANCLUB"
 type PermissionLevel = "DEV" | "MOD" | "SUPERUSER" | "USER";
 
 export default class AccessControl {
+    private modsAllowed: boolean;
+    private dev: string;
+    private helpers: string[];
 
     constructor(
-        public modsAllowed: boolean,
-        private dev: string,
-        private helpers: string[],
-    ) {}
+        modsAllowed: boolean,
+        dev: string,
+        helpers: string[],
+    ) {
+        this.modsAllowed = modsAllowed;
+        this.dev = dev;
+        this.helpers = helpers;
+    }
 
     public hasClaim($user: User, claim: Claim): boolean {
         return this.getClaims($user).includes(claim);

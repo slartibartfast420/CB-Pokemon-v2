@@ -11,6 +11,6 @@ import {game} from "./sharedCode";
 /** React when a tip is received by the room. */
 if(!$tip.isAnon){
     game.addFreebiePokemon($user);
+    game.purchaseObjects($user, $tip);
+    game.levelUp($user, $tip);
 }
-game.purchaseObjects($user, $tip);
-game.levelUp($user, $tip);

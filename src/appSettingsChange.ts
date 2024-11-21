@@ -7,4 +7,4 @@ import {$settings} from "./api/$settings";
 import {game} from "./sharedCode";
 
 /** React when a user updates the app settings. */
-//game.setSettings($settings);
+game.setSettings($settings);

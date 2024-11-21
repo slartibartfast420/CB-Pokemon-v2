@@ -1,5 +1,4 @@
-import {$room, Room} from "../api/$room";
-
+import {Room} from "../api/$room";
 import { MsgColors } from "../misc/colors";
 import { Groups } from "../misc/groups";
 import { Pokemons } from "../models/pokemon/pokemon";
