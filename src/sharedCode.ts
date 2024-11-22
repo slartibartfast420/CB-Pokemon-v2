@@ -13,7 +13,7 @@
 /** Contains all the shared code for all event handlers */
 import Game from "./controllers/game";
 
-const App = {
+const app : App = {
     Name: "Pokemon - Gotta Catch 'Em All",
     Version: "1.6.2",
     Dev: "slartibartfasr420",
@@ -42,4 +42,4 @@ const App = {
         DECLINE: "-decline",
     },
 };
-export const game = new Game(App);
+export const game = new Game(app);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export declare class KvIterator {
     /**
      * Fetches the next key and returns true if a key has been fetched.

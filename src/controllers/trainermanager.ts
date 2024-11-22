@@ -1,5 +1,5 @@
 import {Room} from "../api/$room";
-import { SettingsObj } from "../misc/settingsobj";
+import { KV } from "../api/$kv";
 import PokemonTrainer from "../models/pokemon-trainer";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
 import PokemonDTO from "../models/pokemon/pokemonDTO";
@@ -10,11 +10,9 @@ import PokeDex from "./pokedex";
 export default class TrainerManager {
     public room: Room;
     public PokemonTrainers: Map<string, PokemonTrainer> = new Map<string, PokemonTrainer>();
-    private pokeDex : PokeDex;
     
-    constructor($room: Room, settingsObj : SettingsObj) {
-        this.room = $room;
-        this.pokeDex = new PokeDex(settingsObj);
+    constructor($kv : KV) {
+        this.room = $kv.get("room");
     }
 
     public AddPokemonToTrainer(pokeDexID: number, user: string, tipped = 0) {
@@ -44,8 +42,8 @@ export default class TrainerManager {
             const newPokemon = this.EvolvePokemon(oldPokemon);
             this.PokemonTrainers.get(user)!.Pokemon = newPokemon;
 
-            Messenger.sendInfoMessage(this.room, `Your ${this.pokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${this.pokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user);
-            Messenger.sendInfoMessage(this.room, this.pokeDex.GetEvolutionText(newPokemon), user);
+            Messenger.sendInfoMessage(this.room, `Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user);
+            Messenger.sendInfoMessage(this.room, PokeDex.GetEvolutionText(newPokemon), user);
         }
     }
 
@@ -70,8 +68,8 @@ export default class TrainerManager {
         if (pokemon1.TradeEvolve) {
             const newPokemon = this.EvolvePokemon(pokemon1);
             this.PokemonTrainers.get(user2)!.Pokemon = newPokemon;
-            Messenger.sendInfoMessage(this.room, `Your ${this.pokeDex.GetPokemonIcon(pokemon1)} ${pokemon1.Name} has evolved into a ${this.pokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user2);
-            Messenger.sendInfoMessage(this.room, this.pokeDex.GetEvolutionText(newPokemon), user2);
+            Messenger.sendInfoMessage(this.room, `Your ${PokeDex.GetPokemonIcon(pokemon1)} ${pokemon1.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user2);
+            Messenger.sendInfoMessage(this.room, PokeDex.GetEvolutionText(newPokemon), user2);
         } else {
             this.PokemonTrainers.get(user2)!.Pokemon = pokemon1;
         }
@@ -79,17 +77,17 @@ export default class TrainerManager {
         if (pokemon2.TradeEvolve) {
             const newPokemon = this.EvolvePokemon(pokemon2);
             this.PokemonTrainers.get(user1)!.Pokemon = newPokemon;
-            Messenger.sendInfoMessage(this.room, `Your ${this.pokeDex.GetPokemonIcon(pokemon2)} ${pokemon2.Name} has evolved into a ${this.pokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user1);
-            Messenger.sendInfoMessage(this.room, this.pokeDex.GetEvolutionText(newPokemon), user1);
+            Messenger.sendInfoMessage(this.room, `Your ${PokeDex.GetPokemonIcon(pokemon2)} ${pokemon2.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user1);
+            Messenger.sendInfoMessage(this.room, PokeDex.GetEvolutionText(newPokemon), user1);
         } else {
             this.PokemonTrainers.get(user1)!.Pokemon = pokemon2;
         }
     }
 
-    public ChangePokemonOfUser(user: string) {
+    public ChangePokemonOfUser(user: string, $kv) {
         if (this.PokemonTrainers.has(user)) {
             const oldPkmn = this.PokemonTrainers.get(user)!.Pokemon;
-            const newId = this.pokeDex.GetRandomPokemon(this.PokemonTrainers.get(user)!.Tipped);
+            const newId = PokeDex.GetRandomPokemon($kv, this.PokemonTrainers.get(user)!.Tipped);
             const origin = Pokemons[newId];
             if (origin !== undefined) {
                 this.PokemonTrainers.get(user)!.Pokemon = origin.Clone();

@@ -1,24 +1,19 @@
-import {SettingsObj} from "../misc/settingsobj";
+import { KV } from "../api/$kv";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
 import { Rarity } from "../models/pokemon/rarity";
 
 export default class PokeDex {
-    private settings : SettingsObj;
-    constructor(settingsObj : SettingsObj) {
-        this.settings = settingsObj;
-    }
-
-    public GetPokemonIcon(pokemon: Pokemon): string {
+    public static GetPokemonIcon(pokemon: Pokemon): string {
         let s = pokemon.Id + "";
         while (s.length < 3) { s = "0" + s; }
         return ":pkmn" + s;
     }
 
-    public IdentifyPokemon(pokemon: Pokemon): string {
+    public static IdentifyPokemon(pokemon: Pokemon): string {
         return `PokeDex Entry #${pokemon.Id}: ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} - ${pokemon.Rariry}, ${pokemon.Types[0].Name} - ${pokemon.Description}`;
     }
 
-    public GetEvolutionText(pokemon: Pokemon): string {
+    public static GetEvolutionText(pokemon: Pokemon): string {
         if (!pokemon.TradeEvolve && !pokemon.UsesStone && pokemon.Evolves === 0) {
             return `Your ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} doesn't evolve anymore...`;
         }
@@ -38,23 +33,23 @@ export default class PokeDex {
         return "Evolution is a weird thing, isn't it...";
     }
 
-    public GetRandomPokemon(tipAmount = 0): number {
+    public static GetRandomPokemon($kv : KV, tipAmount = 0, ): number {
         let rarity = Rarity.Common;
-
-        if (tipAmount >= this.settings.mystic_tip) {
+        const settings = $kv.get("Settings");
+        if (tipAmount >= settings.mystic_tip) {
             rarity = Rarity.Mystic;
-        } else if (tipAmount >= this.settings.legendary_tip) {
+        } else if (tipAmount >= settings.legendary_tip) {
             rarity = Rarity.Legendary;
-        } else if (tipAmount >= this.settings.rare_tip) {
+        } else if (tipAmount >= settings.rare_tip) {
             rarity = Rarity.Rare;
-        } else if (tipAmount >= this.settings.uncommon_tip) {
+        } else if (tipAmount >= settings.uncommon_tip) {
             rarity = Rarity.Uncommon;
         }
 
         return this.GetRandomPokemonOfRarity(rarity);
     }
 
-    public GetRandomPokemonOfRarity(rarity: Rarity): number {
+    public static GetRandomPokemonOfRarity(rarity: Rarity): number {
         let random = 0;
 
         while (random === 0 || Pokemons[random].Rariry !== rarity) {

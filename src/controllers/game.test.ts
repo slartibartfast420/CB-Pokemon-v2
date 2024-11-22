@@ -108,7 +108,7 @@ test('tip for pokemon', t => {
     const $user: User = {username: 'bar'} as User;
 
     const game = new Game(App);
-    game.setSettings({catch_pokemon : 0});
+    game.setSettings({catch_pokemon : 0}, $kv);
     game.setBroadcaster($room)
     
     const $tip1: Tip = {tokens: 5} as Tip;
@@ -135,7 +135,7 @@ test('tip for buystone', t => {
     const $owner: User = {username: 'Foo', isOwner : true} as User;
 
     const game = new Game(App);
-    game.setSettings({catch_pokemon : 0});
+    game.setSettings({catch_pokemon : 0}, $kv);
     game.setBroadcaster($room)
     
     // const $tip1: Tip = {tokens: 5} as Tip;

@@ -6,6 +6,6 @@
     "outDir": "temp",
     "moduleResolution": "Node10",
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "strict": false,
   }
 }

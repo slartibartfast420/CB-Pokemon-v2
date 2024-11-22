@@ -1,6 +1,6 @@
 //import {$app} from "./api/$app";
 //import {$callback} from "./api/$callback";
-//import {$kv} from "./api/$kv";
+import {$kv} from "./api/$kv";
 //import {$limitcam} from "./api/$limitcam";
 //import {$room} from "./api/$room";
 import {$tip} from "./api/$tip";
@@ -10,7 +10,7 @@ import {game} from "./sharedCode";
 
 /** React when a tip is received by the room. */
 if(!$tip.isAnon){
-    game.addFreebiePokemon($user);
-    game.purchaseObjects($user, $tip);
-    game.levelUp($user, $tip);
+    game.addFreebiePokemon($user, $kv);
+    game.purchaseObjects($user, $tip, $kv);
+    game.levelUp($user, $tip, $kv);
 }
