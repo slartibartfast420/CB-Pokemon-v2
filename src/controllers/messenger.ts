@@ -1,6 +1,5 @@
 import {Room} from "../api/$room";
 import { MsgColors } from "../misc/colors";
-import { Groups } from "../misc/groups";
 import { Pokemons } from "../models/pokemon/pokemon";
 
 export default class Messenger {
@@ -24,31 +23,31 @@ export default class Messenger {
         this.sendMessage($room, message, user, background, foreground);
     }
 
-    public static sendMessageToGroup($room : Room, message: string, group: Groups, background?: MsgColors, foreground?: MsgColors) {
-        this.sendMessage($room, message, undefined, background, foreground, group);
+    public static sendMessageToGroup($room : Room, message: string, background?: MsgColors, foreground?: MsgColors) {
+        this.sendMessage($room, message, undefined, background, foreground);
     }
 
     public static sendBroadcasterNotice($room : Room, message: string): void {
         this.sendMessageToUser($room, message, $room.owner, MsgColors.Yellow, MsgColors.Purple);
     }
 
-    public static sendErrorMessage($room : Room, message: string, user?: string, group?: Groups) {
-        this.sendMessage($room, message, user, undefined, MsgColors.Red, group);
+    public static sendErrorMessage($room : Room, message: string, user?: string) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Red);
     }
 
-    public static sendWarningMessage($room : Room, message: string, user?: string, group?: Groups) {
-        this.sendMessage($room, message, user, undefined, MsgColors.Orange, group);
+    public static sendWarningMessage($room : Room, message: string, user?: string) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Orange);
     }
 
-    public static sendSuccessMessage($room : Room, message: string, user?: string, group?: Groups) {
-        this.sendMessage($room, message, user, undefined, MsgColors.Green, group);
+    public static sendSuccessMessage($room : Room, message: string, user?: string) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Green);
     }
 
-    public static sendInfoMessage($room : Room, message: string, user?: string, group?: Groups) {
-        this.sendMessage($room, message, user, undefined, MsgColors.Black, group);
+    public static sendInfoMessage($room : Room, message: string, user?: string) {
+        this.sendMessage($room, message, user, undefined, MsgColors.Black);
     }
 
-    private static sendMessage($room : Room, message: string, user?: string, background?: MsgColors, foreground?: MsgColors, group?: Groups) {
+    private static sendMessage($room : Room, message: string, user?: string, background?: MsgColors, foreground?: MsgColors) {
         if($room.sendNotice){
             $room.sendNotice(message, { toUsername: user, bgColor: background as string, color: foreground as string, fontWeight: "bold"});
         } else{

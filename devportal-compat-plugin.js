@@ -109,19 +109,16 @@ module.exports = function (babel) {
                             const partsToInline = importedNames.filter(name => !alreadyInlinedParts.has(name));
 
                             if (partsToInline.length > 0) {
-                                // const relevantInlinedContent = fullInlinedContent.filter(node => {
-                                //     console.log(node)
-                                //     if (t.isVariableDeclaration(node)) {
-                                //         console.log(node.declarations)
-                                //         return node.declarations.some(declaration => partsToInline.includes(declaration.id.name));
-                                //     } else if (t.isFunctionDeclaration(node) || t.isClassDeclaration(node)) {
-                                //         console.log(node.id)
-                                //         return partsToInline.includes(node.id.name);
-                                //     }
-                                //     return false;
-                                // });
-                                var relevantInlinedContent = fullInlinedContent
-                                console.log(relevantInlinedContent)
+                                const relevantInlinedContent = fullInlinedContent.filter(node => {
+                                    if(t.isDeclaration(node)){console.log(node)}
+                                    if (t.isVariableDeclaration(node)) {
+                                        return node.declarations.some(declaration => partsToInline.includes(declaration.id.name));
+                                    } else if (t.isFunctionDeclaration(node) || t.isClassDeclaration(node)) {
+                                        console.log(node.id)
+                                        return partsToInline.includes(node.id.name);
+                                    }
+                                    return false;
+                                });
                                 const filename = nodePath.basename(importPath).replace(/\./g, "_");
 
                                 const nameMapping = {};
@@ -164,7 +161,6 @@ module.exports = function (babel) {
                     const hasExports = path.node.body.some(node =>
                         t.isExportDeclaration(node)
                     );
-
                     // If no export declarations, change source type to 'script'
                     if (!hasExports) {
                         path.node.sourceType = "script";
@@ -172,7 +168,6 @@ module.exports = function (babel) {
                             !t.isExportDeclaration(node)
                         );
                     }
-
                     // Remove nodes in the removal list
                     state.nodesToBeRemoved.forEach(nodePath => {
                         if (nodePath && !nodePath.removed) {

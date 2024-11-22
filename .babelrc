@@ -16,7 +16,9 @@
     "@babel/preset-typescript"
   ],
   "plugins": ["./macro-plugin",
-        "./devportal-compat-plugin"
+        "./devportal-compat-plugin",
+        "@babel/plugin-transform-class-properties",
+        "@babel/plugin-transform-spread"
       ],
   "sourceType": "module"
 }

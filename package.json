@@ -2,10 +2,12 @@
   "name": "cb-pokemon",
   "version": "2.0.0",
   "description": "Chat based pokemon bot for CB",
-  "main": "index.js",
+  "main": "sharedCode.js",
   "scripts": {
     "clean": "script/clean",
     "build": "script/build",
+    "build2": "script/build2",
+    "esbuild": "script/esbuild.mjs",
     "libs": "script/libs",
     "test": "script/test",
     "knip": "knip"
@@ -22,7 +24,7 @@
     "typescript"
   ],
   "author": "slartibartfast420",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/slartibartfast420/CB-Pokemon-v2/issues"
   },
@@ -44,7 +46,12 @@
     "ts-loader": "^9.5.1",
     "typescript": "^5.6.3",
     "webpack": "^5.96.1",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "esbuild": "0.19.3",
+    "eslint": "^8.50.0",
+    "@babel/plugin-transform-class-properties": "^7.22.5"
   },
   "ava": {
     "typescript": {
@@ -53,5 +60,8 @@
         "src/": "temp/"
       }
     }
+  },
+  "dependencies": {
+    "knip": "^5.37.1"
   }
 }

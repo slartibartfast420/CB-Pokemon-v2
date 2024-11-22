@@ -25,8 +25,18 @@ files=(
     "userLeave"
     "userUnfollow"
 )
+
 printf "src/%s.ts\n" "${files[@]}" | xargs npx babel --out-dir dist --extensions '.ts'
 cp "src/broadcastPanel.html" "dist/broadcastPanel.html"
+echo "### ESBUILD"
+npm run esbuild
+
+echo "### BABEL"
+npx babel --verbose ./dist/sharedCode.js -o ./dist/sharedCode.babelized.js
+
+echo "### CB babelized"
+echo '/* eslint-disable no-undef */' > ./dist/sharedCode.cb-babelized.js
+cat ./dist/sharedCode.babelized.js >> ./dist/sharedCode.cb-babelized.js
 
 # Delete empty files from the dist folder
 find dist/ -type f -empty -delete

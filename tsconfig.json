@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    "target": "ES6",
+    "module": "ES2022",
+    "target": "ES2022",
     "esModuleInterop": true,
-    "outDir": "temp"
+    "outDir": "temp",
+    "moduleResolution": "Node10",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
   }
 }
