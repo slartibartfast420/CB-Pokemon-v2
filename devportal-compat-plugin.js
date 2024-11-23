@@ -110,11 +110,11 @@ module.exports = function (babel) {
 
                             if (partsToInline.length > 0) {
                                 const relevantInlinedContent = fullInlinedContent.filter(node => {
-                                    if(t.isDeclaration(node)){console.log(node)}
+                                    //if(t.isDeclaration(node)){console.log(node)}
                                     if (t.isVariableDeclaration(node)) {
                                         return node.declarations.some(declaration => partsToInline.includes(declaration.id.name));
                                     } else if (t.isFunctionDeclaration(node) || t.isClassDeclaration(node)) {
-                                        console.log(node.id)
+                                        //console.log(node.id)
                                         return partsToInline.includes(node.id.name);
                                     }
                                     return false;

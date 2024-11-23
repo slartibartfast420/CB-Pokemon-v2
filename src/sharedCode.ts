@@ -14,8 +14,8 @@
 import Game from "./controllers/game";
 
 const app : App = {
-    Name: "Pokemon - Gotta Catch 'Em All",
-    Version: "1.6.2",
+    Name: "Pokemon Collector",
+    Version: "1.7.0",
     Dev: "slartibartfasr420",
     FairyHelper: ["djdazzydeaf81", "jibleeto"],
     OriginalAuthors: ["asudem", "thmo_"], // Thanks for the idea and everything! Hit me up if you want me to contribute and/or merge or whatever!

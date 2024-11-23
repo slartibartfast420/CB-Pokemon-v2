@@ -47,7 +47,7 @@ export declare class KV {
      * @returns The stored or default value (if provided)
      * @throws error if a given key does not exist and no default value is provided.
      */
-    get(key: string, defaultValue?: string): any;
+    get(key: string, defaultValue?: any): any;
 
     /**
      * Increase a stored integer value by an amount.

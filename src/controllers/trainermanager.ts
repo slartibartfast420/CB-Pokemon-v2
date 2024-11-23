@@ -1,5 +1,5 @@
 import {Room} from "../api/$room";
-import { KV } from "../api/$kv";
+//import { KV } from "../api/$kv";
 import PokemonTrainer from "../models/pokemon-trainer";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
 import PokemonDTO from "../models/pokemon/pokemonDTO";
@@ -11,8 +11,15 @@ export default class TrainerManager {
     public room: Room;
     public PokemonTrainers: Map<string, PokemonTrainer> = new Map<string, PokemonTrainer>();
     
-    constructor($kv : KV) {
-        this.room = $kv.get("room");
+    constructor($room : Room) {
+        this.room = $room;
+    }
+
+    public updateData(PokemonTrainers){
+        this.PokemonTrainers = PokemonTrainers;
+    }
+    public getData() : Map<string, PokemonTrainer>{
+        return this.PokemonTrainers;
     }
 
     public AddPokemonToTrainer(pokeDexID: number, user: string, tipped = 0) {
@@ -36,15 +43,17 @@ export default class TrainerManager {
         }
     }
 
-    public EvolvePokemonOfUser(user: string) {
+    public EvolvePokemonOfUser(user: string) : Array<string> {
+        const messages = [];
         if (this.PokemonTrainers.has(user)) {
             const oldPokemon = this.PokemonTrainers.get(user)!.Pokemon;
             const newPokemon = this.EvolvePokemon(oldPokemon);
             this.PokemonTrainers.get(user)!.Pokemon = newPokemon;
 
-            Messenger.sendInfoMessage(this.room, `Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user);
-            Messenger.sendInfoMessage(this.room, PokeDex.GetEvolutionText(newPokemon), user);
+            messages.push(`Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`);
+            messages.push(PokeDex.GetEvolutionText(newPokemon));
         }
+        return messages;
     }
 
     public EvolvePokemon(pokemon: Pokemon): Pokemon {
@@ -99,7 +108,7 @@ export default class TrainerManager {
     public ExportToDTO(): PokemonTrainerDTO[] {
         const exportdata: PokemonTrainerDTO[] = [];
         this.PokemonTrainers.forEach((trainer) => {
-            const pokemonDTO = new PokemonDTO(trainer.Pokemon.Id, trainer.Pokemon.Move.Name, trainer.Pokemon.Level, trainer.Pokemon.Petname);
+            const pokemonDTO = new PokemonDTO(trainer.Pokemon.Id, trainer.Pokemon.Life, trainer.Pokemon.Move.Name, trainer.Pokemon.Level, trainer.Pokemon.Petname);
             exportdata.push(new PokemonTrainerDTO(trainer.User, pokemonDTO, trainer.Tipped, trainer.BuyStoneWarning, trainer.BuyStoneConfirmation, trainer.TradeRequestedAt, trainer.TradeRequestReceivedFrom));
         });
 
@@ -115,6 +124,7 @@ export default class TrainerManager {
                 if (move !== undefined) {
                     pokemon.Move = move;
                 }
+                pokemon.Life = trainer.Pokemon.Life;
                 pokemon.Level = trainer.Pokemon.Level;
                 pokemon.Petname = trainer.Pokemon.Petname;
 
