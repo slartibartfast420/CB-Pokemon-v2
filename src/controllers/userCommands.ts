@@ -12,6 +12,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
     switch (command) {
         case this.config.CMDS.RELEASE: {
             try {
+                const pt = $kv.get("PokemonTrainerDTO");
+                this.tm.updateData(pt);
                 if (this.tm.PokemonTrainers.has($user.username)) {
                     Messenger.sendInfoMessage($room, `You wave goodbye to your level ${this.tm.PokemonTrainers.get($user.username)!.Pokemon.Level} ${this.tm.PokemonTrainers.get($user.username)!.Pokemon.Name} as it scurries freely into the wild!`, $user.username);
                     this.tm.RemovePokemonFromTrainer($user.username);
@@ -26,6 +28,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
         case this.config.CMDS.IDENTIFY: {
             const [targetUser] = args;
             try {
+                const pt = $kv.get("PokemonTrainerDTO");
+                this.tm.updateData(pt);
                 if (this.tm.PokemonTrainers.has(targetUser)) {
                     Messenger.sendMessageToUser($room, PokeDex.IdentifyPokemon(this.tm.PokemonTrainers.get(targetUser)!.Pokemon), $user.username);
                 } else if (targetUser === "" || targetUser === undefined) {
@@ -39,6 +43,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
             break;
         }
         case this.config.CMDS.BUYSTONE: {
+            const pt = $kv.get("PokemonTrainerDTO");
+            this.tm.updateData(pt);
             if(!this.tm.PokemonTrainers.has($user.username)){
                 Messenger.sendErrorMessage($room, "You don't have a Pokemon.", $user.username);
                 break;
@@ -50,7 +56,7 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
                     if ($user.username === $room.owner) {
                         this.tm.PokemonTrainers.get($user.username)!.BuyStoneWarning = false;
                         this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation = false;
-                        this.tm.EvolvePokemonOfUser($user.username);
+                        this.tm.EvolvePokemonOfUser($user.username,$room);
                     } else {
                         Messenger.sendInfoMessage($room, "Okay, your next tip of " + this.settings.stone_price + " tokens will buy you a " + this.tm.PokemonTrainers.get($user.username)!.Pokemon.Types[0].Stone, $user.username);
                         this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation = true;
@@ -66,7 +72,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
         }
         case this.config.CMDS.TRADE: {
             const [param1] = args;
-
+            const pt = $kv.get("PokemonTrainerDTO");
+            this.tm.updateData(pt);
             if (!this.tm.PokemonTrainers.has($user.username)) {
                 Messenger.sendErrorMessage($room, "Can't do any trading, you don't have a pokemon.", $user.username);
                 break;
@@ -139,6 +146,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
         case this.config.CMDS.LEVEL: {
             const [targetUser] = args;
             try {
+                const pt = $kv.get("PokemonTrainerDTO");
+                this.tm.updateData(pt);
                 if (!this.tm.PokemonTrainers.has(targetUser)) {
                     Messenger.sendErrorMessage($room, "USAGE: '/level <user>' where <user> should be the name of the user who's Pokemon you level want to see.", $user.username);
                     break;
@@ -162,6 +171,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
         }
         case this.config.CMDS.ATTACK: {
             const [targetUser] = args;
+            const pt = $kv.get("PokemonTrainerDTO");
+            this.tm.updateData(pt);
             if (this.tm.PokemonTrainers.has(targetUser)) {
                 if (this.tm.PokemonTrainers.has($user.username)) {
                     if ($user.username === targetUser) {
@@ -195,7 +206,7 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
                             Messenger.sendInfoMessage($room, `You wave goodbye to your level ${this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level} ${this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Name} as it scurries freely into the wild!`, targetUser);
 
                             this.tm.RemovePokemonFromTrainer(targetUser);
-                            this.tm.LevelUpPokemonOfUser($user.username, 2);
+                            this.tm.LevelUpPokemonOfUser($user.username, $room, 2);
                         } else {
                             if (this.settings.public_fights === true) {
                                 Messenger.sendInfoMessage($room, `${$user.username} attacked ${targetUser} (dealt ${currentHP - leftHP} damage, using ${move.Name}, ${leftHP} HP left)`);
@@ -215,6 +226,8 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
             break;
         }
         case this.config.CMDS.LISTTRAINERS: {
+            const pt = $kv.get("PokemonTrainerDTO");
+            this.tm.updateData(pt);
             this.tm.PokemonTrainers.forEach((trainer) => {
                 Messenger.sendInfoMessage($room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", $user.username);
             });

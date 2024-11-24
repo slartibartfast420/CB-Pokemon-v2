@@ -9,26 +9,30 @@ import {game} from "./sharedCode";
 if ($message.orig.trim().indexOf("/") == 0){
     const args = $message.orig.trim().slice(1).split(/\s+/g);
     const command = args.shift().toLowerCase();
-
+    game.refresh($room, $kv, $settings);
     switch (command){
         case game.config.CMDS.SUPPORT : {
             game.toggleSupport($user, $room, $kv);
             break;
         }
         case game.config.CMDS.ADDUSER : {
-            game.addUser(args,$user,$room);
+            game.addUser(args,$user,$room,$kv);
+            break;
+        }
+        case game.config.CMDS.LEVELUP: {
+            game.addLevels(args,$user,$room,$kv);
             break;
         }
         case game.config.CMDS.EVOLVE: {
-            game.change(args,$user,$room,$kv);
+            game.evolve(args,$user,$room,$kv);
             break;
         }
         case game.config.CMDS.CHANGE: {
-            game.remove(args,$user,$room);
+            game.change(args,$user,$room,$kv);
             break;
         }
         case game.config.CMDS.REMOVE: {
-            game.levelup(args,$user,$room);
+            game.remove(args,$user,$room,$kv);
             break;
         }
         case game.config.CMDS.SENDHELP: {

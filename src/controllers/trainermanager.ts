@@ -30,26 +30,24 @@ export default class TrainerManager {
         this.PokemonTrainers.delete(user);
     }
 
-    public LevelUpPokemonOfUser(user: string, numberOfLevels: number) {
+    public LevelUpPokemonOfUser(user: string, $room, numberOfLevels: number) {
         if (this.PokemonTrainers.has(user)) {
             this.PokemonTrainers.get(user)!.Pokemon.LvlUp(numberOfLevels);
             while (this.PokemonTrainers.get(user)!.Pokemon.Evolves !== 0 && this.PokemonTrainers.get(user)!.Pokemon.Level >= this.PokemonTrainers.get(user)!.Pokemon.Evolves) {
-                this.EvolvePokemonOfUser(user);
+                this.EvolvePokemonOfUser(user,$room);
             }
         }
     }
 
-    public EvolvePokemonOfUser(user: string) : Array<string> {
-        const messages = [];
+    public EvolvePokemonOfUser(user: string, $room : Room) {
         if (this.PokemonTrainers.has(user)) {
             const oldPokemon = this.PokemonTrainers.get(user)!.Pokemon;
             const newPokemon = this.EvolvePokemon(oldPokemon);
             this.PokemonTrainers.get(user)!.Pokemon = newPokemon;
 
-            messages.push(`Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`);
-            messages.push(PokeDex.GetEvolutionText(newPokemon));
+            Messenger.sendInfoMessage($room,`Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`);
+            Messenger.sendInfoMessage($room,PokeDex.GetEvolutionText(newPokemon));
         }
-        return messages;
     }
 
     public EvolvePokemon(pokemon: Pokemon): Pokemon {

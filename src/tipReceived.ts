@@ -12,5 +12,5 @@ import {game} from "./sharedCode";
 if(!$tip.isAnon){
     game.addFreebiePokemon($user, $kv, $settings);
     game.purchaseObjects($user, $room, $tip, $kv, $settings);
-    game.levelUp($user, $tip, $kv);
+    game.levelUp($user, $room, $tip, $kv);
 }
