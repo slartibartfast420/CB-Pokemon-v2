@@ -7,6 +7,7 @@ import {$settings} from "./api/$settings";
 import {game} from "./sharedCode";
 
 /** React when the app is started. This is a great place to initialize storage variables, send a welcome message to the broadcaster, or anything else you want to do just once when your app starts. */
+$kv.set("broadcaster", $room.owner);
 const support_mode = $kv.get("SupportMode", false);
 $kv.set("SupportMode", support_mode)
 

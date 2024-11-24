@@ -1,15 +1,10 @@
-import { $kv } from "./api/$kv";
-import { $room } from "./api/$room";
 import Game from "./controllers/game";
 /** Contains all the shared code for all event handlers */
 // Do not change this...
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const AppAuthor = 'slartibartfasr420';
-
 // ...change this instead if you fork this app
 export const AppMaintainer = 'slartibartfasr420';
-
-$kv.set("broadcaster", $room.owner);
 
 const app : App = {
     Name: "Pokemon Collector",
