@@ -49,10 +49,6 @@ export default class AccessControl {
     }
 
     public hasPermission($user: User, permission: PermissionLevel): boolean {
-        if (this.hasClaim($user, "IS_DEV")) {
-            return true;
-        }
-
         const hasAnyClaim = (claims: Claim[]): boolean => {
             if (this.getClaims($user).some((claim) => (claims.includes(claim)))) {
                 return true;
@@ -63,13 +59,13 @@ export default class AccessControl {
         switch (permission) {
             case "MOD":
                 if (this.modsAllowed) {
-                    return hasAnyClaim(["IS_BROADCASTER", "IS_MOD"]);
+                    return hasAnyClaim(["IS_BROADCASTER", "IS_MOD", "IS_DEV"]);
                 } else {
                     return hasAnyClaim(["IS_BROADCASTER"]);
                 }
             case "SUPERUSER":
                 if (this.modsAllowed) {
-                    return hasAnyClaim(["IS_BROADCASTER", "IS_MOD", "IS_HELPER"]);
+                    return hasAnyClaim(["IS_BROADCASTER", "IS_MOD", "IS_DEV", "IS_HELPER"]);
                 } else {
                     return hasAnyClaim(["IS_BROADCASTER"]);
                 }

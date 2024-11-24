@@ -8,7 +8,6 @@ export function isSuperuser(user: string, owner: string, isMod: boolean, mod_all
 }
 
 export function isDevOrHelper(user: string, list: string[]) {
-    console.log(`Test list: ${list}`);
     return list.includes(user);
 }
 
