@@ -1,4 +1,4 @@
-import { KV } from "../api/$kv";
+import { Settings } from "../api/$settings";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
 import { Rarity } from "../models/pokemon/rarity";
 
@@ -33,16 +33,15 @@ export default class PokeDex {
         return "Evolution is a weird thing, isn't it...";
     }
 
-    public static GetRandomPokemon($kv : KV, tipAmount = 0, ): number {
+    public static GetRandomPokemon($settings : Settings, tipAmount = 0, ): number {
         let rarity = Rarity.Common;
-        const settings = $kv.get("Settings");
-        if (tipAmount >= settings.mystic_tip) {
+        if (tipAmount >= $settings.mystic_tip) {
             rarity = Rarity.Mystic;
-        } else if (tipAmount >= settings.legendary_tip) {
+        } else if (tipAmount >= $settings.legendary_tip) {
             rarity = Rarity.Legendary;
-        } else if (tipAmount >= settings.rare_tip) {
+        } else if (tipAmount >= $settings.rare_tip) {
             rarity = Rarity.Rare;
-        } else if (tipAmount >= settings.uncommon_tip) {
+        } else if (tipAmount >= $settings.uncommon_tip) {
             rarity = Rarity.Uncommon;
         }
 

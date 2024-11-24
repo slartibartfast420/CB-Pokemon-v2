@@ -1,12 +1,23 @@
-import {$room} from "./api/$room";
 import {$kv} from "./api/$kv";
 import {$message} from "./api/$message";
 import {$user} from "./api/$user";
 import {$settings} from "./api/$settings";
-import {game} from "./sharedCode";
+import {game, AppMaintainer} from "./sharedCode";
+import { $app } from "./api/$app";
 
-/** Manipulate a message before it is published in the room chat. Use the methods available on the $message object to apply transformations. */
-game.refresh($kv, $settings, $room);
-game.stripEmoticon($message);
-game.handleCommands($message,$user,$kv);
-game.addPokemonFlair($message,$user,$kv);
+/** Manipulate a message before it is published in the room chat. 
+ * Use the methods available on the $message object to apply transformations. */
+if ($message.orig.trim().indexOf("/") !== 0) {
+    game.setSettings($kv, $settings);
+    game.setAccessControl();
+    game.stripEmoticon($message);
+    game.addPokemonFlair($message,$user,$kv);
+  } else {
+    if ($message.setBody) {
+      $message.setSpam(true);
+      $message.setColor("#FFFFFF");
+      $message.setBgColor("#E7E7E7");
+    } else if ($kv.get("broadcaster", null) === AppMaintainer || $app.version === 'Testbed') { // testing only allowed in the author's room and on dev
+      
+    }
+}

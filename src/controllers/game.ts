@@ -11,18 +11,95 @@ import PokeDex from "./pokedex";
 import TrainerManager from "./trainermanager";
 import { Settings } from "http2";
 import PokemonTrainer from "../models/pokemon-trainer";
-import { handleCommands } from "./handleCommands";
+import { userCommands } from "./userCommands";
+import { Pokemons } from "../models/pokemon/pokemon";
 //import { throwDeprecation } from "process";
 
 export default class Game {
     public settings: SettingsObj;
-    public banner: Banner;
-    public room: Room;
-    private tm: TrainerManager;
-    private accessControl: AccessControl;
+    public banner: Banner = new Banner();
+    public tm: TrainerManager = new TrainerManager();
+    public accessControl: AccessControl;
 
     constructor(public config: App) {
         this.settings = new SettingsObj();
+    }
+    public sendHelp(args, $user: User, $settings : Settings, $room : Room){
+        if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            const [targetUser] = args;
+            let user: string | undefined;
+            if (targetUser !== undefined && targetUser !== "") {
+                user = targetUser;
+            }
+            this.banner.sendWelcomeAndBannerMessage($settings, $room, user);
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
+    }
+    public evolve(args, $user : User, $room : Room){
+        if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            const [targetUser] = args;
+            this.tm.EvolvePokemonOfUser(targetUser);
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
+    }
+    public change(args, $user : User, $room : Room, $kv : KV){
+        if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            const [targetUser] = args;
+            this.tm.ChangePokemonOfUser(targetUser, $room, $kv);
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
+    }
+    public remove(args, $user : User, $room : Room){
+        if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            const [targetUser] = args;
+            this.tm.RemovePokemonFromTrainer(targetUser);
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
+    }
+    public levelup(args, $user : User, $room : Room){
+        if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            const [targetUser, levelsString] = args;
+            const levels = parseInt(levelsString, 10);
+
+            if (this.tm.PokemonTrainers.has(targetUser) && levels > 0) {
+                this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level += levels;
+                if ($user.username !== this.config.Dev && this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level > 100) {
+                    this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level = 100;
+                }
+                this.tm.PokemonTrainers.get(targetUser)!.Pokemon.updateStats();
+            }
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
+    }
+    public addUser(args, $user : User, $room : Room){
+        if (this.accessControl.hasPermission($user, "SUPERUSER")) {
+            const [targetUser, pokedexNumberString] = args;
+            const pokedexNumber = parseInt(pokedexNumberString, 10);
+            if (pokedexNumber <= Pokemons.length && pokedexNumber >= 0) {
+                this.tm.AddPokemonToTrainer(pokedexNumber, targetUser, 0);
+                const pkmn = this.tm.PokemonTrainers.get(targetUser)!.Pokemon;
+                const reply = `${PokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name} was given to ${targetUser}`;
+                Messenger.sendSuccessMessage($room,reply)
+            }
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
+    }
+    public toggleSupport($user, $room, $kv){
+        if (this.accessControl.hasPermission($user, "MOD")) {
+            let support_mode = $kv.get("SupportMode", false)
+            support_mode = !support_mode;
+            $kv.set("SupportMode", support_mode)
+            const reply = "Support mode for Pokedex bot Ver." + this.config.Version + " is now " + (support_mode ? "ACTIVATED" : "DEACTIVATED") + "!";
+            Messenger.sendSuccessMessage($room,reply)
+        } else {
+            Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
+        }
     }
 
     //#region OnEnter Functions
@@ -34,23 +111,22 @@ export default class Game {
         }
     }
 
-    public sendWelcomeMessage($user: User, $room: Room, $kv : KV) {
-        const pt = $kv.get("PokemonTrainers");
-        this.tm.updateData(pt);
+    public sendWelcomeMessage($user: User, $room: Room, $kv : KV, $settings: Settings) {
+        const pto = $kv.get("PokemonTrainerDTO");
+        this.tm.updateData(pto);
         if (!this.tm.PokemonTrainers.has($user.username)) {
             Messenger.sendWelcomeMessage($room, $user.username);
-            this.banner.sendBanner($kv, $user.username);
+            this.banner.sendBanner($settings, $room, $user.username);
         }
     }
 
-    public addFreebiePokemonToFanclub($user: User, $kv : KV) {
-        const settings = $kv.get("settings");
-        const pt = $kv.get("PokemonTrainers");
-        this.tm.updateData(pt);
+    public addFreebiePokemonToFanclub($user: User, $kv : KV, $settings : Settings) {
+        const pto = $kv.get("PokemonTrainerDTO");
+        this.tm.updateData(pto);
 
-        if (settings.fanclub_auto_catch && this.accessControl.hasClaim($user, "IN_FANCLUB") && !this.tm.PokemonTrainers.has($user.username)) {
-            this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon($kv), $user.username, 0);
-            $kv.set("PokemonTrainers", this.tm.getData());
+        if (this.settings.fanclub_auto_catch && this.accessControl.hasClaim($user, "IN_FANCLUB") && !this.tm.PokemonTrainers.has($user.username)) {
+            this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon($settings), $user.username, 0);
+            $kv.set("PokemonTrainerDTO", this.tm.saveData());
         }
     }
     //#endregion
@@ -69,30 +145,27 @@ export default class Game {
         }
     }
 
-    public handleCommands($message: Message, $user: User, $kv : KV) {
-        handleCommands($message, $user, $kv);
-    }
+    public userCommands = userCommands;
 
-    public addFreebiePokemon($user: User, $kv : KV) {
-        const settings = $kv.get("settings");
-        const pt = $kv.get("PokemonTrainers");
+    public addFreebiePokemon($user: User, $kv : KV, $settings : Settings) {
+        const pt = $kv.get("PokemonTrainerDTO");
         this.tm.updateData(pt);
-        if (settings.catch_pokemon === 0 && !this.tm.PokemonTrainers.has($user.username)) {
-            this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon($kv), $user.username, 0);
+        if (this.settings.catch_pokemon === 0 && !this.tm.PokemonTrainers.has($user.username)) {
+            this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon($settings), $user.username, 0);
         }
-        $kv.set("PokemonTrainers", this.tm.getData());
+        $kv.set("PokemonTrainerDTO", this.tm.saveData());
     }
 
     public addPokemonFlair($message: Message, $user: User, $kv : KV) {
-        const pt = $kv.get("PokemonTrainers");
+        const pt = $kv.get("PokemonTrainerDTO");
         this.tm.updateData(pt);
         let msg = $message.orig;
         if (this.tm.PokemonTrainers.has($user.username) && !$message.isSpam) {
             const pokemon = this.tm.PokemonTrainers.get($user.username)!.Pokemon;
             msg = PokeDex.GetPokemonIcon(pokemon) + " " + msg;
             if (this.settings.colorize_chat) {
-                $message.color = pokemon.Types[0].FontColor;
-                $message.bgColor = pokemon.Types[0].Color;
+                $message.setColor(pokemon.Types[0].FontColor);
+                $message.setBgColor(pokemon.Types[0].Color);
             }
         }
         if ($user.username === this.config.Dev && !$message.isSpam) {
@@ -104,51 +177,46 @@ export default class Game {
     //#endregion
 
     //#region OnTip Functions
-    public purchaseObjects($user: User, $tip: Tip, $kv : KV) {
-        const settings = $kv.get("settings");
-        const pt = $kv.get("PokemonTrainers");
+    public purchaseObjects($user: User, $room : Room, $tip: Tip, $kv : KV, $settings : Settings) {
+        const pt = $kv.get("PokemonTrainerDTO");
         this.tm.updateData(pt);
-        const room =$kv.get("room");
 
-        if (!this.tm.PokemonTrainers.has($user.username) && settings.catch_pokemon <= $tip.tokens) {
-            this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon($kv, $tip.tokens), $user.username, $tip.tokens);
+        if (!this.tm.PokemonTrainers.has($user.username) && this.settings.catch_pokemon <= $tip.tokens) {
+            this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon($settings, $tip.tokens), $user.username, $tip.tokens);
             const pkmn = this.tm.PokemonTrainers.get($user.username)!.Pokemon;
-            Messenger.sendInfoMessage(room, `You successfully caught a ${PokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name}, congrats! Treat it well, fellow trainer.`);
+            Messenger.sendInfoMessage($room, `You successfully caught a ${PokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name}, congrats! Treat it well, fellow trainer.`);
         } else if (this.tm.PokemonTrainers.has($user.username) && this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation === true) {
-            if ($tip.tokens === settings.stone_price) {
-                Messenger.sendInfoMessage(room, "You just purchased a " + this.tm.PokemonTrainers.get($user.username)!.Pokemon.Types[0].Stone + "!", $user.username);
+            if ($tip.tokens === this.settings.stone_price) {
+                Messenger.sendInfoMessage($room, "You just purchased a " + this.tm.PokemonTrainers.get($user.username)!.Pokemon.Types[0].Stone + "!", $user.username);
                 this.tm.PokemonTrainers.get($user.username)!.BuyStoneWarning = false;
                 this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation = false;
                 this.tm.EvolvePokemonOfUser($user.username);
             }
         }
-        $kv.set("PokemonTrainers", this.tm.getData());
+        $kv.set("PokemonTrainerDTO", this.tm.saveData());
     }
 
     public levelUp($user: User, $tip: Tip, $kv : KV) {
-        const pt = $kv.get("PokemonTrainers");
+        const pt = $kv.get("PokemonTrainerDTO");
         this.tm.updateData(pt);
         if (this.tm.PokemonTrainers.has($user.username)) {
             this.tm.PokemonTrainers.get($user.username)!.Tipped += $tip.tokens;
             this.tm.LevelUpPokemonOfUser($user.username, Math.floor($tip.tokens / this.settings.level_pokemon));
         }
-        $kv.set("PokemonTrainers", this.tm.getData());
+        $kv.set("PokemonTrainerDTO", this.tm.saveData());
     }
     public setSettings($kv: KV, $settings : Settings){
-        //const $settings = $kv.get("Settings");
         Object.assign(this.settings, $settings);
-        //$kv.set("Settings", this.settings);
-        this.banner = new Banner();        
-        this.setAccessControl();
     }
 
-    public refresh($kv: KV, $settings : Settings, $room : Room){
+    public refresh($room: Room, $kv: KV, $settings : Settings){
         this.setSettings($kv, $settings);
-        this.tm = new TrainerManager($room);
+        this.setAccessControl();
         this.setupEliteFour($kv);
+        this.initBroadcaster($room,$kv);
     }
 
-    private setAccessControl(){
+    public setAccessControl(){
         if (this.settings.mod_allow_broadcaster_cmd) {
             this.accessControl = new AccessControl(this.settings.mod_allow_broadcaster_cmd, this.config.Dev, this.config.FairyHelper);
         } else {
@@ -157,12 +225,12 @@ export default class Game {
     }
 
     public setBroadcaster($kv : KV, $settings : Settings, $room : Room){
-        this.initBroadcaster($room,$kv);
+        //this.initBroadcaster($room,$kv);
         Messenger.sendSuccessMessage($room, "Pokemon Collector v" + this.config.Version + " started.");
         Messenger.sendBroadcasterNotice($room, "This Pokemon Bot is in beta. It can not become better if I do not know what is wrong. Please comment on the bot's page any errors or questions. Make sure to check out the original Version (PokeDex) of asudem! Thank you.");
     }
-    private setupEliteFour($kv){
-        const pt = $kv.get("PokemonTrainers");
+    public setupEliteFour($kv){
+        const pt = $kv.get("PokemonTrainerDTO");
         this.tm.updateData(pt);
         if (this.settings.elite_four_1 !== undefined && this.settings.elite_four_1.length > 0 && this.settings.elite_four_1_pokemon !== 0) {
             this.tm.AddPokemonToTrainer(this.settings.elite_four_1_pokemon, this.settings.elite_four_1, 0);
@@ -184,11 +252,10 @@ export default class Game {
             this.tm.PokemonTrainers.get(this.settings.elite_four_4)!.Pokemon.Level = 100;
             this.tm.PokemonTrainers.get(this.settings.elite_four_4)!.Pokemon.updateStats();
         }
-        $kv.set("PokemonTrainers", this.tm.getData());
+        $kv.set("PokemonTrainerDTO", this.tm.saveData());
     }
-    private initBroadcaster($room: Room, $kv : KV) {
-        this.room=$room;
-        let pt = $kv.get("PokemonTrainers");
+    public initBroadcaster($room: Room, $kv : KV) {
+        let pt = $kv.get("PokemonTrainerDTO");
         if(pt.length == 0){
             pt = new Map<string, PokemonTrainer>();
         }
@@ -201,11 +268,11 @@ export default class Game {
             }
         }
         
-        $kv.set("PokemonTrainers", this.tm.getData());
+        $kv.set("PokemonTrainerDTO", this.tm.saveData());
     }
     //#endregion
 
-    private eliteFourDefeated(): boolean {
+    public eliteFourDefeated(): boolean {
         let defeated = true;
 
         if (this.settings.elite_four_1.length > 0 && this.tm.PokemonTrainers.has(this.settings.elite_four_1)) {
@@ -224,7 +291,7 @@ export default class Game {
         return defeated;
     }
 
-    private isEliteFourMember(user: string): boolean {
+    public isEliteFourMember(user: string): boolean {
         if (this.settings.elite_four_1 !== undefined && this.settings.elite_four_1.length > 0 && user === this.settings.elite_four_1) {
             return true;
         } else if (this.settings.elite_four_2 !== undefined && this.settings.elite_four_2.length > 0 && user === this.settings.elite_four_2) {
@@ -238,22 +305,22 @@ export default class Game {
         }
     }
 
-    private listEliteFourMembers(user: string ) {
+    public listEliteFourMembers(user: string , $room : Room) {
         if (this.settings.elite_four_1 !== undefined && this.settings.elite_four_1.length > 0 && this.tm.PokemonTrainers.has(this.settings.elite_four_1)) {
             const trainer = this.tm.PokemonTrainers.get(this.settings.elite_four_1)!;
-            Messenger.sendInfoMessage(this.room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
+            Messenger.sendInfoMessage($room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
         }
         if (this.settings.elite_four_2 !== undefined && this.settings.elite_four_2.length > 0 && this.tm.PokemonTrainers.has(this.settings.elite_four_2)) {
             const trainer = this.tm.PokemonTrainers.get(this.settings.elite_four_2)!;
-            Messenger.sendInfoMessage(this.room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
+            Messenger.sendInfoMessage($room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
         }
         if (this.settings.elite_four_3 !== undefined && this.settings.elite_four_3.length > 0 && this.tm.PokemonTrainers.has(this.settings.elite_four_3)) {
             const trainer = this.tm.PokemonTrainers.get(this.settings.elite_four_3)!;
-            Messenger.sendInfoMessage(this.room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
+            Messenger.sendInfoMessage($room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
         }
         if (this.settings.elite_four_4 !== undefined && this.settings.elite_four_4.length > 0 && this.tm.PokemonTrainers.has(this.settings.elite_four_4)) {
             const trainer = this.tm.PokemonTrainers.get(this.settings.elite_four_4)!;
-            Messenger.sendInfoMessage(this.room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
+            Messenger.sendInfoMessage($room, trainer.User + " has " + trainer.Pokemon.Name + " on Level " + trainer.Pokemon.Level + " and it as " + trainer.Pokemon.Life + " HP left.", user);
         }
     }
 }

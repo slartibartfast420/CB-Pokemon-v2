@@ -8,7 +8,7 @@ import {$settings} from "./api/$settings";
 import {game} from "./sharedCode";
 
 /** React when a user enters the room. */
-game.refresh($kv, $settings, $room);
+game.refresh($room, $kv, $settings);
 game.sendDevInfo($user, $room);
-game.sendWelcomeMessage($user, $room, $kv);
-game.addFreebiePokemonToFanclub($user, $kv);
+game.sendWelcomeMessage($user, $room, $kv, $settings);
+game.addFreebiePokemonToFanclub($user, $kv, $settings);

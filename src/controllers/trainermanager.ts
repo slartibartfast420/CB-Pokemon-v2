@@ -1,4 +1,5 @@
 import {Room} from "../api/$room";
+import { Settings } from "../api/$settings";
 //import { KV } from "../api/$kv";
 import PokemonTrainer from "../models/pokemon-trainer";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
@@ -8,18 +9,13 @@ import Messenger from "./messenger";
 import PokeDex from "./pokedex";
 
 export default class TrainerManager {
-    public room: Room;
     public PokemonTrainers: Map<string, PokemonTrainer> = new Map<string, PokemonTrainer>();
-    
-    constructor($room : Room) {
-        this.room = $room;
-    }
 
-    public updateData(PokemonTrainers){
-        this.PokemonTrainers = PokemonTrainers;
+    public updateData(pto : PokemonTrainerDTO[]){
+        this.ImportFromDTO(pto);
     }
-    public getData() : Map<string, PokemonTrainer>{
-        return this.PokemonTrainers;
+    public saveData() : PokemonTrainerDTO[]{
+        return this.ExportToDTO();
     }
 
     public AddPokemonToTrainer(pokeDexID: number, user: string, tipped = 0) {
@@ -66,7 +62,7 @@ export default class TrainerManager {
         return newPokemon;
     }
 
-    public TradePokemonWithUser(user1: string, user2: string) {
+    public TradePokemonWithUser(user1: string, user2: string, $room) {
         if (!this.PokemonTrainers.has(user1) || !this.PokemonTrainers.has(user2)) {
             return;
         }
@@ -77,8 +73,8 @@ export default class TrainerManager {
         if (pokemon1.TradeEvolve) {
             const newPokemon = this.EvolvePokemon(pokemon1);
             this.PokemonTrainers.get(user2)!.Pokemon = newPokemon;
-            Messenger.sendInfoMessage(this.room, `Your ${PokeDex.GetPokemonIcon(pokemon1)} ${pokemon1.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user2);
-            Messenger.sendInfoMessage(this.room, PokeDex.GetEvolutionText(newPokemon), user2);
+            Messenger.sendInfoMessage($room, `Your ${PokeDex.GetPokemonIcon(pokemon1)} ${pokemon1.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user2);
+            Messenger.sendInfoMessage($room, PokeDex.GetEvolutionText(newPokemon), user2);
         } else {
             this.PokemonTrainers.get(user2)!.Pokemon = pokemon1;
         }
@@ -86,22 +82,22 @@ export default class TrainerManager {
         if (pokemon2.TradeEvolve) {
             const newPokemon = this.EvolvePokemon(pokemon2);
             this.PokemonTrainers.get(user1)!.Pokemon = newPokemon;
-            Messenger.sendInfoMessage(this.room, `Your ${PokeDex.GetPokemonIcon(pokemon2)} ${pokemon2.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user1);
-            Messenger.sendInfoMessage(this.room, PokeDex.GetEvolutionText(newPokemon), user1);
+            Messenger.sendInfoMessage($room, `Your ${PokeDex.GetPokemonIcon(pokemon2)} ${pokemon2.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user1);
+            Messenger.sendInfoMessage($room, PokeDex.GetEvolutionText(newPokemon), user1);
         } else {
             this.PokemonTrainers.get(user1)!.Pokemon = pokemon2;
         }
     }
 
-    public ChangePokemonOfUser(user: string, $kv) {
+    public ChangePokemonOfUser(user: string, $room : Room, $settings : Settings) {
         if (this.PokemonTrainers.has(user)) {
             const oldPkmn = this.PokemonTrainers.get(user)!.Pokemon;
-            const newId = PokeDex.GetRandomPokemon($kv, this.PokemonTrainers.get(user)!.Tipped);
+            const newId = PokeDex.GetRandomPokemon($settings, this.PokemonTrainers.get(user)!.Tipped);
             const origin = Pokemons[newId];
             if (origin !== undefined) {
                 this.PokemonTrainers.get(user)!.Pokemon = origin.Clone();
             }
-            Messenger.sendInfoMessage(this.room, "Your " + oldPkmn.Name + " has been swapped for a " + this.PokemonTrainers.get(user)!.Pokemon.Name + ".", user);
+            Messenger.sendInfoMessage($room, "Your " + oldPkmn.Name + " has been swapped for a " + this.PokemonTrainers.get(user)!.Pokemon.Name + ".", user);
         }
     }
 

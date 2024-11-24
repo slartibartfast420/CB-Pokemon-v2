@@ -2,7 +2,7 @@
  */
 
 export class SettingsObj implements SettingsLocal {
-    mod_allow_broadcaster_cmd: boolean = true;
+    mod_allow_broadcaster_cmd: boolean = false;
     banner_rotate: number = 240;
     broadcaster_pokemon: number = 25;
     catch_pokemon: number = 25;
