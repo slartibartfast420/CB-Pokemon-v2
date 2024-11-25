@@ -5,7 +5,7 @@ import { Settings } from "../api/$settings";
 import { Room } from "../api/$room";
 
 export default class Banner {
-    private startMessage =  `Pokemon - Gotta Catch 'Em All (with Tokens :P)!
+    private startMessage =  `Pokemon Collector (with Tokens :P)!
                             '/level <username>' to see a Pokemon's level.
                             '/identify <username>' uses the Pokedex.
                             '/attack <username>' to attack your foe!

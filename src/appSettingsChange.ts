@@ -9,4 +9,5 @@ import { game } from "./sharedCode";
 //import {game} from "./sharedCode";
 
 /** React when a user updates the app settings. */
-game.refresh($room, $kv, $settings);
+game.refresh($kv, $settings);
+game.initBroadcaster($room,$kv);

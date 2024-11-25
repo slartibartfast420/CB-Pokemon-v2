@@ -14,6 +14,7 @@ $kv.set("SupportMode", support_mode)
 const dto = $kv.get("PokemonTrainerDTO", []);
 $kv.set("PokemonTrainerDTO", dto);
 
-game.refresh($room, $kv, $settings);
-game.setBroadcaster($kv,$settings,$room);
+game.refresh($kv, $settings);
+game.initBroadcaster($room,$kv);
+game.setBroadcaster($room);
 $callback.create("banner", $settings.banner_rotate, true);

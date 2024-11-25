@@ -9,7 +9,7 @@ import {game} from "./sharedCode";
 if ($message.orig.trim().indexOf("/") == 0){
     const args = $message.orig.trim().slice(1).split(/\s+/g);
     const command = args.shift().toLowerCase();
-    game.refresh($room, $kv, $settings);
+    game.refresh($kv, $settings);
     switch (command){
         case game.config.CMDS.SUPPORT : {
             game.toggleSupport($user, $room, $kv);

@@ -49,13 +49,16 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
                 Messenger.sendErrorMessage($room, "You don't have a Pokemon.", $user.username);
                 break;
             }
-
+            if ($user.username === $room.owner) {
+                this.tm.PokemonTrainers.get($user.username)!.BuyStoneWarning = false;
+                this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation = true;
+                this.tm.EvolvePokemonOfUser($user.username,$room);
+            }
             if (this.tm.PokemonTrainers.has($user.username) && this.tm.PokemonTrainers.get($user.username)!.Pokemon.UsesStone) {
-                //console.log(this.tm.PokemonTrainers.get($user.username));
                 if (this.tm.PokemonTrainers.get($user.username)!.BuyStoneWarning === true) {
                     if ($user.username === $room.owner) {
                         this.tm.PokemonTrainers.get($user.username)!.BuyStoneWarning = false;
-                        this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation = false;
+                        this.tm.PokemonTrainers.get($user.username)!.BuyStoneConfirmation = true;
                         this.tm.EvolvePokemonOfUser($user.username,$room);
                     } else {
                         Messenger.sendInfoMessage($room, "Okay, your next tip of " + this.settings.stone_price + " tokens will buy you a " + this.tm.PokemonTrainers.get($user.username)!.Pokemon.Types[0].Stone, $user.username);
@@ -73,74 +76,80 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
         case this.config.CMDS.TRADE: {
             const [param1] = args;
             const pt = $kv.get("PokemonTrainerDTO");
-            this.tm.updateData(pt);
-            if (!this.tm.PokemonTrainers.has($user.username)) {
-                Messenger.sendErrorMessage($room, "Can't do any trading, you don't have a pokemon.", $user.username);
-                break;
-            }
-
-            if (param1 === this.config.CMDS.ACCEPT) {
-                const receiver = this.tm.PokemonTrainers.get($user.username)!;
-                if (!this.tm.PokemonTrainers.has(receiver.TradeRequestReceivedFrom!)) {
-                    Messenger.sendErrorMessage($room, "Your trading partner doesn't seem to have his pokemon anymore...", receiver.User);
-                    break;
+            try {
+                this.tm.updateData(pt);
+                if (!this.tm.PokemonTrainers.has($user.username)) {
+                    throw("Missing Pokemon");
+                    //Messenger.sendErrorMessage($room, "Can't do any trading, you don't have a pokemon.", $user.username);
+                    //break;
                 }
-                const requester = this.tm.PokemonTrainers.get(receiver.TradeRequestReceivedFrom!)!;
-                if (requester.TradeRequestedAt === $user.username) {
-                    Messenger.sendInfoMessage($room, "Preparations complete. Trade has been accepted. Initiating trade.", $user.username);
-                    Messenger.sendInfoMessage($room, "Preparations complete. Trade has been accepted. Initiating trade.", requester.User);
-                    this.tm.TradePokemonWithUser(receiver.User, requester.User, $room);
+                // const receiver = this.tm.PokemonTrainers.get(param1)!;
+                // if (!this.tm.PokemonTrainers.has(receiver.User)) {
+                //     throw new Error("Missing Pokemon");
+                //     //Messenger.sendErrorMessage($room, "Your trading partner doesn't have a pokemon.", receiver.User);
+                //    // break;
+                // }
 
-                    //cb.setTimeout(() => true, 50);
-                    Messenger.sendSuccessMessage($room, `${requester.User} and ${receiver.User} have successfully traded their pokemon!`);
-                } else {
-                    Messenger.sendErrorMessage($room, "Upps, something went wrong during the trading. Your cache has been cleared and the trade info has been resetted.", $user.username);
-                    Messenger.sendErrorMessage($room, "Upps, something went wrong during the trading. Your cache has been cleared and the trade info has been resetted.", requester.User);
-                }
 
-                this.tm.PokemonTrainers.get(requester.User)!.TradeRequestedAt = undefined;
-                this.tm.PokemonTrainers.get(receiver.User)!.TradeRequestReceivedFrom = undefined;
-            } else if (param1 === this.config.CMDS.DECLINE) {
-                const receiver = this.tm.PokemonTrainers.get($user.username)!;
-                const requester = this.tm.PokemonTrainers.get(receiver.TradeRequestReceivedFrom!)!;
-                if (requester.TradeRequestedAt === $user.username) {
-                    Messenger.sendErrorMessage($room, "The trade you requested was sadly decline.", requester.User);
-                }
-                Messenger.sendErrorMessage($room, "You declined the trade request", receiver.User);
-
-                this.tm.PokemonTrainers.get(requester.User)!.TradeRequestedAt = undefined;
-                this.tm.PokemonTrainers.get(receiver.User)!.TradeRequestReceivedFrom = undefined;
-
-            } else if (this.tm.PokemonTrainers.has(param1)) {
-                // if targetuser has no request open, request trade
-                const requester = this.tm.PokemonTrainers.get($user.username)!;
-                const receiver = this.tm.PokemonTrainers.get(param1)!;
-
-                const requesterHasNoOpenTrade = requester.TradeRequestedAt === undefined && requester.TradeRequestReceivedFrom === undefined;
-                const receiverHasNoOpenTrade = receiver.TradeRequestedAt === undefined && receiver.TradeRequestReceivedFrom === undefined;
-                if (requesterHasNoOpenTrade && receiverHasNoOpenTrade) {
-                    this.tm.PokemonTrainers.get(receiver.User)!.TradeRequestReceivedFrom = requester.User;
-                    this.tm.PokemonTrainers.get(requester.User)!.TradeRequestedAt = receiver.User;
-
-                    Messenger.sendSuccessMessage($room, "Your trade request has been sent!", requester.User);
-                    Messenger.sendSuccessMessage($room, "Trade request received!", receiver.User);
-                    Messenger.sendInfoMessage($room, `${requester.User} wants to trade their LVL ${requester.Pokemon.Level} ${requester.Pokemon.Name} with your pokemon!`, receiver.User);
-                    Messenger.sendInfoMessage($room, "Type '/trade -accept' to accept the trade or type '/trade -decline' to decline the offer.", receiver.User);
-                } else {
-                    if (!requesterHasNoOpenTrade) {
-                        Messenger.sendErrorMessage($room, "You still have an open trade request.", requester.User);
+                if (param1 === this.config.CMDS.ACCEPT) {
+                    const receiver = this.tm.PokemonTrainers.get($user.username)!;
+                    const requester = this.tm.PokemonTrainers.get(receiver.TradeRequestReceivedFrom!)!;
+                    if (requester.TradeRequestedAt === $user.username) {
+                        Messenger.sendInfoMessage($room, "Preparations complete. Trade has been accepted. Initiating trade.", $user.username);
+                        Messenger.sendInfoMessage($room, "Preparations complete. Trade has been accepted. Initiating trade.", requester.User);
+                        this.tm.TradePokemonWithUser(receiver.User, requester.User, $room);
+                        Messenger.sendSuccessMessage($room, `${requester.User} and ${receiver.User} have successfully traded their pokemon!`);
+                    } else {
+                        Messenger.sendErrorMessage($room, "Opps, something went wrong during the trading. Your cache has been cleared and the trade info has been resetted.", $user.username);
+                        Messenger.sendErrorMessage($room, "Opps, something went wrong during the trading. Your cache has been cleared and the trade info has been resetted.", requester.User);
                     }
-                    if (!receiverHasNoOpenTrade) {
-                        Messenger.sendErrorMessage($room, "Your trading partner still has an open trade request.", requester.User);
+
+                    this.tm.PokemonTrainers.get(requester.User)!.TradeRequestedAt = undefined;
+                    this.tm.PokemonTrainers.get(receiver.User)!.TradeRequestReceivedFrom = undefined;
+                } else if (param1 === this.config.CMDS.DECLINE) {
+                    const receiver = this.tm.PokemonTrainers.get($user.username)!;
+                    const requester = this.tm.PokemonTrainers.get(receiver.TradeRequestReceivedFrom!)!;
+                    if (requester.TradeRequestedAt === $user.username) {
+                        Messenger.sendErrorMessage($room, "The trade you requested was sadly decline.", requester.User);
                     }
+                    Messenger.sendErrorMessage($room, "You declined the trade request", receiver.User);
+
+                    this.tm.PokemonTrainers.get(requester.User)!.TradeRequestedAt = undefined;
+                    this.tm.PokemonTrainers.get(receiver.User)!.TradeRequestReceivedFrom = undefined;
+
+                } else if (this.tm.PokemonTrainers.has(param1)) {
+                    // if targetuser has no request open, request trade
+                    const requester = this.tm.PokemonTrainers.get($user.username)!;
+                    const receiver = this.tm.PokemonTrainers.get(param1)!;
+
+                    const requesterHasNoOpenTrade = requester.TradeRequestedAt === undefined && requester.TradeRequestReceivedFrom === undefined;
+                    const receiverHasNoOpenTrade = receiver.TradeRequestedAt === undefined && receiver.TradeRequestReceivedFrom === undefined;
+                    if (requesterHasNoOpenTrade && receiverHasNoOpenTrade) {
+                        this.tm.PokemonTrainers.get(receiver.User)!.TradeRequestReceivedFrom = requester.User;
+                        this.tm.PokemonTrainers.get(requester.User)!.TradeRequestedAt = receiver.User;
+
+                        Messenger.sendSuccessMessage($room, "Your trade request has been sent!", requester.User);
+                        Messenger.sendSuccessMessage($room, "Trade request received!", receiver.User);
+                        Messenger.sendInfoMessage($room, `${requester.User} wants to trade their LVL ${requester.Pokemon.Level} ${requester.Pokemon.Name} with your pokemon!`, receiver.User);
+                        Messenger.sendInfoMessage($room, "Type '/trade -accept' to accept the trade or type '/trade -decline' to decline the offer.", receiver.User);
+                    } else {
+                        if (!requesterHasNoOpenTrade) {
+                            Messenger.sendErrorMessage($room, "You still have an open trade request.", requester.User);
+                        }
+                        if (!receiverHasNoOpenTrade) {
+                            Messenger.sendErrorMessage($room, "Your trading partner still has an open trade request.", requester.User);
+                        }
+                    }
+                } else {
+                    throw new Error(`User ${param1} does not have a pokemon.`)
+                    //Messenger.sendErrorMessage($room, "Unknown trade command:", $user.username);
                 }
-            } else {
-                Messenger.sendErrorMessage($room, "Unknown trade command:", $user.username);
+            } catch(err){
+                Messenger.sendErrorMessage($room,err);
                 Messenger.sendInfoMessage($room, "Use '/trade <username>' to request a trade with another trainer (<username>)", $user.username);
                 Messenger.sendInfoMessage($room, "Use '/trade -accept' to accept the last trade you received and intiate trading.", $user.username);
                 Messenger.sendInfoMessage($room, "Use '/trade -decline' to decline the last trade request.", $user.username);
             }
-
             break;
         }
         case this.config.CMDS.LEVEL: {

@@ -13,6 +13,7 @@ import { Settings } from "http2";
 import PokemonTrainer from "../models/pokemon-trainer";
 import { userCommands } from "./userCommands";
 import { Pokemons } from "../models/pokemon/pokemon";
+import { customStringify } from "../misc/helpers";
 //import { throwDeprecation } from "process";
 
 export default class Game {
@@ -39,6 +40,7 @@ export default class Game {
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
             }
         } catch(err){
+            Messenger.sendErrorMessage($room,err);
             Messenger.sendErrorMessage($room, "USAGE: '/sendHelp <user> where <user> should be the name of the user you want to send help to.", $user.username);
         }
     }
@@ -51,6 +53,9 @@ export default class Game {
                 if(targetUser === undefined){
                     throw new Error("Missing arguments");
                 }
+                if(!this.tm.PokemonTrainers.has(targetUser)){
+                    throw new Error("User does not have a pokemon.");
+                }
                 this.tm.EvolvePokemonOfUser(targetUser,$room);
                 $kv.set("PokemonTrainerDTO", this.tm.saveData());
                 Messenger.sendSuccessMessage($room,`${targetUser}'s pokemon has evolved.`)
@@ -58,6 +63,7 @@ export default class Game {
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
             }
         } catch(err){
+            Messenger.sendErrorMessage($room,err);
             Messenger.sendErrorMessage($room, "USAGE: '/evolve <user> where <user> should be the name of the user you want to evolve.", $user.username);
         }
     }
@@ -70,13 +76,17 @@ export default class Game {
                 if(targetUser === undefined){
                     throw new Error("Missing arguments");
                 }
+                if(!this.tm.PokemonTrainers.has(targetUser)){
+                    throw new Error("User does not have a pokemon.");
+                }
                 this.tm.ChangePokemonOfUser(targetUser, $room, $kv);
                 $kv.set("PokemonTrainerDTO", this.tm.saveData());
-                //Messenger.sendSuccessMessage($room,`${targetUser}'s pokemon has been changed.`)
+                Messenger.sendSuccessMessage($room,`${targetUser}'s pokemon has been changed.`)
             } else {
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
             }
         } catch(err){
+            Messenger.sendErrorMessage($room,err);
             Messenger.sendErrorMessage($room, "USAGE: '/change <user> where <user> should be the name of the user you want to change.", $user.username);
         }
     }
@@ -86,6 +96,12 @@ export default class Game {
                 const pt = $kv.get("PokemonTrainerDTO");
                 this.tm.updateData(pt);
                 const [targetUser] = args;
+                if(targetUser === undefined){
+                    throw new Error("Missing arguments");
+                }
+                if(!this.tm.PokemonTrainers.has(targetUser)){
+                    throw new Error("User does not have a pokemon.");
+                }
                 this.tm.RemovePokemonFromTrainer(targetUser);
                 $kv.set("PokemonTrainerDTO", this.tm.saveData());
                 const reply = `${targetUser}'s pokemon has been released.`
@@ -94,6 +110,7 @@ export default class Game {
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
             }
         } catch(err){
+            Messenger.sendErrorMessage($room,err);
             Messenger.sendErrorMessage($room, "USAGE: '/remove <user> where <user> should be the name of the user you want to remove.", $user.username);
         }
     }
@@ -104,8 +121,11 @@ export default class Game {
                 this.tm.updateData(pt);
                 const [targetUser, levelsString] = args;
                 const levels = parseInt(levelsString, 10);
-                if(targetUser === undefined || levels=== undefined ){
+                if(targetUser === undefined || levelsString === undefined ){
                     throw new Error("Missing arguments");
+                }
+                if(!this.tm.PokemonTrainers.has(targetUser)){
+                    throw new Error("User does not have a pokemon.");
                 }
                 if (this.tm.PokemonTrainers.has(targetUser) && levels > 0) {
                     this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level += levels;
@@ -122,6 +142,7 @@ export default class Game {
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
             }
         } catch(err){
+            Messenger.sendErrorMessage($room,err);
             Messenger.sendErrorMessage($room, "USAGE: '/levelup <user> <levels>' where <user> should be the name of the user you want to give <levels> levels to.", $user.username);
         }
     }
@@ -132,7 +153,7 @@ export default class Game {
                 this.tm.updateData(pt);
                 const [targetUser, pokedexNumberString] = args;
                 const pokedexNumber = parseInt(pokedexNumberString, 10);
-                if(targetUser === undefined || pokedexNumber=== undefined ){
+                if(targetUser === undefined || pokedexNumberString === undefined ){
                     throw new Error("Missing arguments");
                 }
                 if (pokedexNumber <= Pokemons.length && pokedexNumber >= 0) {
@@ -141,11 +162,14 @@ export default class Game {
                     const reply = `${PokeDex.GetPokemonIcon(pkmn)} ${pkmn.Name} was given to ${targetUser}`;
                     Messenger.sendSuccessMessage($room,reply)
                     $kv.set("PokemonTrainerDTO", this.tm.saveData());
+                } else {
+                    throw new Error("Pokemon Index out of range.")
                 }
             } else {
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
             } 
         } catch (err) {
+            Messenger.sendErrorMessage($room,err);
             Messenger.sendErrorMessage($room, "USAGE: '/adduser <user> <pokedex id>' where <user> should be the name of the user you want to give <pokedex id> to.", $user.username);
         }
     }
@@ -258,21 +282,42 @@ export default class Game {
     public levelUp($user: User, $room : Room, $tip: Tip, $kv : KV) {
         const pt = $kv.get("PokemonTrainerDTO");
         this.tm.updateData(pt);
+        
         if (this.tm.PokemonTrainers.has($user.username)) {
             this.tm.PokemonTrainers.get($user.username)!.Tipped += $tip.tokens;
             this.tm.LevelUpPokemonOfUser($user.username, $room, Math.floor($tip.tokens / this.settings.level_pokemon));
+            const newPokemon = this.tm.PokemonTrainers.get($user.username)!.Pokemon;
+            Messenger.sendInfoMessage($room,`Your ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name} has leveled up to ${newPokemon.Level}!`); 
         }
         $kv.set("PokemonTrainerDTO", this.tm.saveData());
     }
-    public setSettings($kv: KV, $settings : Settings){
-        Object.assign(this.settings, $settings);
+    public setSettings($settings : Settings ){
+        this.settings.mod_allow_broadcaster_cmd  = $settings.mod_allow_broadcaster_cmd
+        this.settings.banner_rotate              = $settings.banner_rotate
+        this.settings.broadcaster_pokemon        = $settings.broadcaster_pokemon
+        this.settings.catch_pokemon              = $settings.catch_pokemon
+        this.settings.uncommon_tip               = $settings.uncommon_tip
+        this.settings.rare_tip                   = $settings.rare_tip
+        this.settings.legendary_tip              = $settings.legendary_tip
+        this.settings.mystic_tip                 = $settings.mystic_tip
+        this.settings.level_pokemon              = $settings.level_pokemon
+        this.settings.stone_price                = $settings.stone_price
+        this.settings.fanclub_auto_catch         = $settings.fanclub_auto_catch
+        this.settings.elite_four_1               = $settings.elite_four_1
+        this.settings.elite_four_1_pokemon       = $settings.elite_four_1_pokemon
+        this.settings.elite_four_2               = $settings.elite_four_2
+        this.settings.elite_four_2_pokemon       = $settings.elite_four_2_pokemon
+        this.settings.elite_four_3               = $settings.elite_four_3
+        this.settings.elite_four_3_pokemon       = $settings.elite_four_3_pokemon
+        this.settings.elite_four_4               = $settings.elite_four_4
+        this.settings.elite_four_4_pokemon       = $settings.elite_four_4_pokemon
+        this.settings.public_fights              = $settings.public_fights
+        this.settings.colorize_chat              = $settings.colorize_chat
     }
-
-    public refresh($room: Room, $kv: KV, $settings : Settings){
-        this.setSettings($kv, $settings);
+    public refresh($kv: KV, $settings : Settings){
+        this.setSettings($settings);
         this.setAccessControl();
         this.setupEliteFour($kv);
-        this.initBroadcaster($room,$kv);
     }
 
     public setAccessControl(){
@@ -283,8 +328,7 @@ export default class Game {
         }
     }
 
-    public setBroadcaster($kv : KV, $settings : Settings, $room : Room){
-        //this.initBroadcaster($room,$kv);
+    public setBroadcaster($room : Room){
         Messenger.sendSuccessMessage($room, "Pokemon Collector v" + this.config.Version + " started.");
         Messenger.sendBroadcasterNotice($room, "This Pokemon Bot is in beta. It can not become better if I do not know what is wrong. Please comment on the bot's page any errors or questions. Make sure to check out the original Version (PokeDex) of asudem! Thank you.");
     }

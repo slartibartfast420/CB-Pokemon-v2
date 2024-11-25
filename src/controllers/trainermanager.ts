@@ -96,6 +96,8 @@ export default class TrainerManager {
                 this.PokemonTrainers.get(user)!.Pokemon = origin.Clone();
             }
             Messenger.sendInfoMessage($room, "Your " + oldPkmn.Name + " has been swapped for a " + this.PokemonTrainers.get(user)!.Pokemon.Name + ".", user);
+        } else{
+            Messenger.sendErrorMessage($room, `${user} does not have a pokemon.`);
         }
     }
 

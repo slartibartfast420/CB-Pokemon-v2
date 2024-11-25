@@ -8,7 +8,7 @@ export const AppMaintainer = 'slartibartfasr420';
 
 const app : App = {
     Name: "Pokemon Collector",
-    Version: "1.7.0",
+    Version: "0.7.0",
     Dev: AppMaintainer,
     FairyHelper: [],
     OriginalAuthors: ["asudem", "thmo_"], // Thanks for the idea and everything! Hit me up if you want me to contribute and/or merge or whatever!
@@ -29,8 +29,6 @@ const app : App = {
         LEVEL: "level",
         ATTACK: "attack",
         SENDHELP: "sendhelp",
-        //EXPORT: "export",
-        //IMPORT: "import",
         ACCEPT: "-accept",
         DECLINE: "-decline",
     },

@@ -8,7 +8,7 @@ import { $app } from "./api/$app";
 /** Manipulate a message before it is published in the room chat. 
  * Use the methods available on the $message object to apply transformations. */
 if ($message.orig.trim().indexOf("/") !== 0) {
-    game.setSettings($kv, $settings);
+    game.setSettings($settings);
     game.setAccessControl();
     game.stripEmoticon($message);
     game.addPokemonFlair($message,$user,$kv);
