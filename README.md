@@ -1,8 +1,12 @@
 # v2 CB's #1 Pokemon Bot
 
-My fork to create a v2 api version of this CB Pokemon bot, and further improve it. It is not functional yet, so don't try to use it if you find this before it is. 
+My fork to create a v2 api version of this CB Pokemon bot, and further improve it.
 it is based on the following two projects. 
 
+I updated to v2 API.
+I tested the trade system.
+I updated dependencies.
+I added Chikorita.
 ---
 
 # CB's #1 Pokemon Bot
@@ -13,7 +17,7 @@ The code is public, feel free to check it out, copy it and make your own version
 
 # Some Information
 
-Current # of Pokemon: 151 (All Gen 1 Pokemon)
+Current # of Pokemon: 152 (All Gen 1 Pokemon + Chikorita)
 Current # of Attacks: 728 (All up to ORAS, only are partially Sun & Moon missing)
 Current # of Types: 18 (All current Pokemontypes)
 Current functionality:
@@ -21,6 +25,7 @@ Current functionality:
 - Catch Pokemon with different Pokeballs
 - Level 'em up
 - Release the pokemon and catch more
+- Trade with other users
 - Attack your opponents and battle with your pokemons.
 ***Damage is calculated according to whats known of the official games.**
 It includes the Base Stats of your Pokemon and the new stats according to your level.
@@ -38,6 +43,7 @@ Develop, test, and compile apps for the Chaturbate App v2 platform, all locally.
 ## Table of Contents
 
 - [v2 CB's #1 Pokemon Bot](#v2-cbs-1-pokemon-bot)
+  - [I added Chikorita.](#i-added-chikorita)
 - [CB's #1 Pokemon Bot](#cbs-1-pokemon-bot)
 - [Some Information](#some-information)
 - [Chaturbate-AppV2-DevKit](#chaturbate-appv2-devkit)
