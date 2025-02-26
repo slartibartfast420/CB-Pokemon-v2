@@ -4,13 +4,13 @@ import {$user} from "./api/$user";
 import {$settings} from "./api/$settings";
 import {game, AppMaintainer} from "./sharedCode";
 import { $app } from "./api/$app";
+import { SettingsLocal } from "./definitions/settingslocal";
 
 /** Manipulate a message before it is published in the room chat. 
  * Use the methods available on the $message object to apply transformations. */
 if ($message.orig.trim().indexOf("/") !== 0) {
-    game.setSettings($settings);
+    game.setSettings($settings as unknown as SettingsLocal);
     game.setAccessControl();
-    game.stripEmoticon($message);
     game.addPokemonFlair($message,$user,$kv);
   } else {
     if ($message.setBody) {

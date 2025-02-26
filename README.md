@@ -22,7 +22,6 @@ Current # of Attacks: 728 (All up to ORAS, only are partially Sun & Moon missing
 Current # of Types: 18 (All current Pokemontypes)
 Current functionality:
 
-- Catch Pokemon with different Pokeballs
 - Level 'em up
 - Release the pokemon and catch more
 - Trade with other users

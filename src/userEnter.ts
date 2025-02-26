@@ -9,6 +9,4 @@ import {game} from "./sharedCode";
 
 /** React when a user enters the room. */
 game.refresh($kv, $settings);
-game.sendDevInfo($user, $room);
-game.sendWelcomeMessage($user, $room, $kv, $settings);
-game.addFreebiePokemonToFanclub($user, $kv, $settings);
+game.sendWelcomeMessage($user, $room, $kv);

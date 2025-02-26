@@ -24,24 +24,34 @@ export class Pokemon {
     public Atk: number;
     public Def: number;
     public Life: number;
+    public Fainted: boolean;
+    public FaintedAt: Date;
+    public CaughtAt: Date;
 
-    public constructor(
+    constructor(
         public Id: number,
         public Name: string,
+        // tslint:disable-next-line:no-shadowed-variable
         public Types: Type[],
         public Rariry: Rarity = Rarity.Common,
-        public Level: number = 1,
-        public Stage: number = 1,
-        public Evolves: number = 0,
-        public Description: string = "The PokeDex doesn't have Data on this strange unknown Pokemon... Have you maybe found a new type of Pokemon?",
-        public TradeEvolve: boolean = false,
-        public UsesStone: boolean = false,
-        public BaseAtk: number = 40,
-        public BaseDef: number = 40,
-        public BaseLife: number = 40,
-        public availableMoves: Move[] = [Moves.Scratch, Moves.Pound]
+        public Level = 1,
+        public Stage: 1|2|3 = 1,
+        public Evolves = 0,
+        public Description = "The PokeDex doesn't have Data on this strange unknown Pokemon... Have you maybe found a new type of Pokemon?",
+        public TradeEvolve = false,
+        public UsesStone = false,
+        public BaseAtk = 40,
+        public BaseDef = 40,
+        public BaseLife = 40,
+        public availableMoves: Move[] = [Moves.Scratch, Moves.Pound],
     ) {
         this.Move = this.availableMoves[Math.floor(Math.random() * this.availableMoves.length)];
+        this.Atk = BaseAtk;
+        this.Def = BaseDef;
+        this.Life = BaseLife;
+        this.CaughtAt = new Date(),
+        this.Fainted = false;
+        this.FaintedAt = null;
 
         this.updateStats();
     }

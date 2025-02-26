@@ -1,6 +1,6 @@
 /* For local copy of parsed settings object
  */
-interface SettingsLocal {
+export interface Settings {
   mod_allow_broadcaster_cmd: boolean;
   banner_rotate: number;
   broadcaster_pokemon: number;
@@ -11,6 +11,7 @@ interface SettingsLocal {
   mystic_tip: number;
   level_pokemon: number;
   stone_price: number;
+  revive_price: number;
   fanclub_auto_catch: boolean;
   elite_four_1: string;
   elite_four_1_pokemon: number;
@@ -22,5 +23,7 @@ interface SettingsLocal {
   elite_four_4_pokemon: number;
   public_fights: boolean;
   colorize_chat: boolean;
+  
 }
 
+export type SettingsLocal = Settings;

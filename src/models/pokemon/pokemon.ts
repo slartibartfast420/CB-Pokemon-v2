@@ -8,6 +8,9 @@ export class Pokemon {
     public Atk: number;
     public Def: number;
     public Life: number;
+    public Fainted: boolean;
+    public FaintedAt: Date;
+    public CaughtAt: Date;
 
     constructor(
         public Id: number,
@@ -27,11 +30,12 @@ export class Pokemon {
         public availableMoves: Move[] = [Moves.Scratch, Moves.Pound],
     ) {
         this.Move = this.availableMoves[Math.floor(Math.random() * this.availableMoves.length)];
-        // leaving this in here becuase of editor beeing racist and not recognizing the function does this shit...
         this.Atk = BaseAtk;
         this.Def = BaseDef;
         this.Life = BaseLife;
-        // end racist crap
+        this.CaughtAt = new Date(),
+        this.Fainted = false;
+        this.FaintedAt = null;
 
         this.updateStats();
     }
@@ -91,6 +95,9 @@ export class Pokemon {
         const damage = precalc * modifier;
 
         foe.Life = Math.round(foe.Life - damage);
+        if(foe.Life <= 0) {
+            foe.Fainted = true;
+        }
         return foe.Life;
     }
 
@@ -113,9 +120,15 @@ export class Pokemon {
         return this.Level;
     }
 
-    public Clone(): Pokemon {
+    public Clone(keepDate? : Date): Pokemon {
         const pkmn = new Pokemon(this.Id, this.Name, this.Types, this.Rariry, this.Level, this.Stage, this.Evolves, this.Description, this.TradeEvolve, this.UsesStone, this.BaseAtk, this.BaseDef, this.BaseLife, this.availableMoves);
         pkmn.Petname = this.Petname;
+        if (keepDate) {
+            pkmn.CaughtAt = keepDate;
+        } else {
+            pkmn.CaughtAt = new Date();
+        }
+        pkmn.updateStats();
         return pkmn;
     }
 }

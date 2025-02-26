@@ -8,7 +8,10 @@ export default class PokemonTrainerDTO {
         public Tipped = 0,
         public BuyStoneWarning = false,
         public BuyStoneConfirmation = false,
+        public BuyReviveWarning = false,
+        public BuyReviveConfirmation = false,
+        public TrainerSince: Date,
         public TradeRequestedAt?: string,
-        public TradeRequestReceivedFrom?: string,
+        public TradeRequestReceivedFrom?: string
     ) { }
 }

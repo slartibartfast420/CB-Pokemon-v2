@@ -1,5 +1,5 @@
 import {Room} from "../api/$room";
-import { Settings } from "../api/$settings";
+import { SettingsLocal } from "../definitions/settingslocal";
 //import { KV } from "../api/$kv";
 import PokemonTrainer from "../models/pokemon-trainer";
 import { Pokemon, Pokemons } from "../models/pokemon/pokemon";
@@ -51,6 +51,9 @@ export default class TrainerManager {
     }
 
     public EvolvePokemon(pokemon: Pokemon): Pokemon {
+        if (pokemon.Evolves === 0) {
+            return pokemon;
+        }
         const newPokemon = Pokemons[pokemon.Id + 1].Clone();
         if (newPokemon.Level < pokemon.Level) {
             newPokemon.Level = pokemon.Level;
@@ -87,7 +90,7 @@ export default class TrainerManager {
         }
     }
 
-    public ChangePokemonOfUser(user: string, $room : Room, $settings : Settings) {
+    public ChangePokemonOfUser(user: string, $room : Room, $settings : SettingsLocal) {
         if (this.PokemonTrainers.has(user)) {
             const oldPkmn = this.PokemonTrainers.get(user)!.Pokemon;
             const newId = PokeDex.GetRandomPokemon($settings, this.PokemonTrainers.get(user)!.Tipped);
@@ -104,8 +107,8 @@ export default class TrainerManager {
     public ExportToDTO(): PokemonTrainerDTO[] {
         const exportdata: PokemonTrainerDTO[] = [];
         this.PokemonTrainers.forEach((trainer) => {
-            const pokemonDTO = new PokemonDTO(trainer.Pokemon.Id, trainer.Pokemon.Life, trainer.Pokemon.Move.Name, trainer.Pokemon.Level, trainer.Pokemon.Petname);
-            exportdata.push(new PokemonTrainerDTO(trainer.User, pokemonDTO, trainer.Tipped, trainer.BuyStoneWarning, trainer.BuyStoneConfirmation, trainer.TradeRequestedAt, trainer.TradeRequestReceivedFrom));
+            const pokemonDTO = new PokemonDTO(trainer.Pokemon.Id, trainer.Pokemon.Life, trainer.Pokemon.Move.Name, trainer.Pokemon.Level, trainer.Pokemon.Petname, trainer.Pokemon.CaughtAt, trainer.Pokemon.Fainted, trainer.Pokemon.FaintedAt);
+            exportdata.push(new PokemonTrainerDTO(trainer.User, pokemonDTO, trainer.Tipped, trainer.BuyStoneWarning, trainer.BuyStoneConfirmation, trainer.BuyReviveWarning, trainer.BuyReviveConfirmation, trainer.TrainerSince, trainer.TradeRequestedAt, trainer.TradeRequestReceivedFrom));
         });
 
         return exportdata;
@@ -115,7 +118,14 @@ export default class TrainerManager {
         importdata.forEach((trainer) => {
             const origin = Pokemons[trainer.Pokemon.Id];
             if (origin !== undefined) {
-                const pokemon = origin.Clone();
+                if (trainer.Pokemon.CaughtAt === undefined) {
+                    trainer.Pokemon.CaughtAt = new Date();
+                    trainer.Pokemon.FaintedAt = null;
+                    trainer.Pokemon.Fainted = false;
+                    trainer.BuyReviveWarning = false;
+                    trainer.BuyReviveConfirmation = false;
+                }
+                const pokemon = origin.Clone(trainer.Pokemon.CaughtAt);
                 const move = pokemon.availableMoves.find((m) => m.Name === trainer.Pokemon.Move);
                 if (move !== undefined) {
                     pokemon.Move = move;
@@ -123,12 +133,18 @@ export default class TrainerManager {
                 pokemon.Life = trainer.Pokemon.Life;
                 pokemon.Level = trainer.Pokemon.Level;
                 pokemon.Petname = trainer.Pokemon.Petname;
+                pokemon.CaughtAt = trainer.Pokemon.CaughtAt;
+                pokemon.Fainted = trainer.Pokemon.Fainted;
+                pokemon.FaintedAt = trainer.Pokemon.FaintedAt;
 
                 const pokemontrainer = new PokemonTrainer(trainer.User, pokemon, trainer.Tipped);
                 pokemontrainer.BuyStoneConfirmation = trainer.BuyStoneConfirmation;
                 pokemontrainer.BuyStoneWarning = trainer.BuyStoneWarning;
+                pokemontrainer.BuyReviveConfirmation = trainer.BuyReviveConfirmation;
+                pokemontrainer.BuyReviveWarning = trainer.BuyReviveWarning;
                 pokemontrainer.TradeRequestReceivedFrom = trainer.TradeRequestReceivedFrom;
                 pokemontrainer.TradeRequestedAt = trainer.TradeRequestedAt;
+                pokemontrainer.TrainerSince = trainer.TrainerSince;
 
                 this.PokemonTrainers.set(trainer.User, pokemontrainer);
             }

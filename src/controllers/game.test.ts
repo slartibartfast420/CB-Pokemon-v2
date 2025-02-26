@@ -3,13 +3,14 @@ import {Room} from "../api/$room";
 import {User} from "../api/$user";
 import {Tip} from "../api/$tip";
 import {Message} from "../api/$message";
+import {KV} from "../api/$kv";
 import Game from "./game";
 
 const App = {
-    Name: "Pokemon - Gotta Catch 'Em All",
-    Version: "1.6.2",
-    Dev: "slartibartfasr420",
-    FairyHelper: ["djdazzydeaf81", "jibleeto"],
+    Name: "Pokemon Collector",
+    Version: "0.7.5",
+    Dev: "AppMaintainer",
+    FairyHelper: [],
     OriginalAuthors: ["asudem", "thmo_"], // Thanks for the idea and everything! Hit me up if you want me to contribute and/or merge or whatever!
     Prefix: "/",
     CMDS: {
@@ -17,8 +18,10 @@ const App = {
         LEVELUP: "levelup",
         EVOLVE: "evolve",
         CHANGE: "change",
+        REVIVE: "revive",
         REMOVE: "remove",
         RELEASE: "release",
+        GETNEWPKMN: "getnewpkmn",
         LISTTRAINERS: "listtrainers",
         LISTELITEFOUR: "listelitefour",
         IDENTIFY: "identify",
@@ -28,13 +31,12 @@ const App = {
         LEVEL: "level",
         ATTACK: "attack",
         SENDHELP: "sendhelp",
-        //EXPORT: "export",
-        //IMPORT: "import",
         ACCEPT: "-accept",
         DECLINE: "-decline",
+        REVIVEUSER: "reviveuser",
     }
 };
-
+    
 test('create game', t => {
     const game = new Game(App);
     console.log(game)
@@ -53,9 +55,9 @@ test('user enter', t => {
     const $user: User = {username: 'bar'} as User;
     const game = new Game(App);
     game.setBroadcaster($room)
-    game.sendDevInfo($user);
-    game.sendWelcomeMessage($user);
-    game.addFreebiePokemonToFanclub($user);
+    const $kv = {} as KV;
+    game.sendWelcomeMessage($user, $room, $kv);
+    game.addFreebiePokemonToFanclub($user, $kv);
     t.true(game !== undefined);
 });
 

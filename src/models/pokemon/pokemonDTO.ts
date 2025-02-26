@@ -5,5 +5,8 @@ export default class PokemonDTO {
     public Move: string,
     public Level: number,
     public Petname: string | null = null,
+    public CaughtAt: Date,
+    public Fainted: boolean,
+    public FaintedAt: Date  
     ) {}
 }

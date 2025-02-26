@@ -8,7 +8,7 @@ export const AppMaintainer = 'slartibartfasr420';
 
 const app : App = {
     Name: "Pokemon Collector",
-    Version: "0.7.0",
+    Version: "0.7.5",
     Dev: AppMaintainer,
     FairyHelper: [],
     OriginalAuthors: ["asudem", "thmo_"], // Thanks for the idea and everything! Hit me up if you want me to contribute and/or merge or whatever!
@@ -18,8 +18,10 @@ const app : App = {
         LEVELUP: "levelup",
         EVOLVE: "evolve",
         CHANGE: "change",
+        REVIVE: "revive",
         REMOVE: "remove",
         RELEASE: "release",
+        GETNEWPKMN: "getnewpkmn",
         LISTTRAINERS: "listtrainers",
         LISTELITEFOUR: "listelitefour",
         IDENTIFY: "identify",
@@ -31,6 +33,7 @@ const app : App = {
         SENDHELP: "sendhelp",
         ACCEPT: "-accept",
         DECLINE: "-decline",
+        REVIVEUSER: "reviveuser",
     },
 };
 export const game = new Game(app);

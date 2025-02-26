@@ -1,6 +1,8 @@
 /* For local copy of parsed settings object
  */
 
+import { SettingsLocal } from '../definitions/settingslocal'; // Ensure this path is correct
+
 export class SettingsObj implements SettingsLocal {
     mod_allow_broadcaster_cmd: boolean = false;
     banner_rotate: number = 240;
@@ -12,6 +14,7 @@ export class SettingsObj implements SettingsLocal {
     mystic_tip: number = 1000;
     level_pokemon: number = 10;
     stone_price: number = 200;
+    revive_price: number = 100;
     fanclub_auto_catch: boolean = true;
     elite_four_1: string = '';
     elite_four_1_pokemon: number = 144;
