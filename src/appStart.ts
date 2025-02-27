@@ -14,6 +14,12 @@ $kv.set("SupportMode", support_mode)
 const dto = $kv.get("PokemonTrainerDTO", []);
 $kv.set("PokemonTrainerDTO", dto);
 
+const broadcasterNumber = $kv.get("broadcasterNumber", 1);
+$kv.set("broadcasterNumber", broadcasterNumber);
+
+const broadcastStartedAt = $kv.get("broadcastStartedAt", new Date().toISOString());
+$kv.set("broadcastStartedAt", broadcastStartedAt);
+
 game.refresh($kv, $settings);
 game.initBroadcaster($room,$kv);
 game.setBroadcaster($room);

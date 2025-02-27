@@ -15,6 +15,7 @@ export class SettingsObj implements SettingsLocal {
     level_pokemon: number = 10;
     stone_price: number = 200;
     revive_price: number = 100;
+    move_price: number = 42;
     fanclub_auto_catch: boolean = true;
     elite_four_1: string = '';
     elite_four_1_pokemon: number = 144;

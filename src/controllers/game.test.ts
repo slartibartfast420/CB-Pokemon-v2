@@ -28,7 +28,6 @@ const App = {
         SUPPORT: "support",
         BUYSTONE: "buystone",
         TRADE: "trade",
-        LEVEL: "level",
         ATTACK: "attack",
         SENDHELP: "sendhelp",
         ACCEPT: "-accept",

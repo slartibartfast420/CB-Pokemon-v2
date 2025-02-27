@@ -62,6 +62,7 @@ export default class Game {
                 const trainer = this.tm.PokemonTrainers.get(targetUser)!;
                 trainer.Pokemon.Fainted = false;
                 trainer.Pokemon.FaintedAt = null;
+                this.tm.updateEvolution(targetUser, $room);
                 trainer.Pokemon.updateStats();
                 $kv.set("PokemonTrainerDTO", this.tm.saveData());
                 Messenger.sendSuccessMessage($room, `${targetUser}'s ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name} has been revived!`);
@@ -70,7 +71,7 @@ export default class Game {
             }
         } catch(err) {
             Messenger.sendErrorMessage($room, err, $user.username);
-            Messenger.sendErrorMessage($room, "USAGE: '/revive <user>' where <user> should be the name of the user whose pokemon you want to revive.", $user.username);
+            Messenger.sendErrorMessage($room, "USAGE: '/reviveuser <user>' where <user> should be the name of the user whose pokemon you want to revive.", $user.username);
         }
     }
     public evolve(args, $user : User, $room : Room, $kv : KV){
@@ -161,6 +162,7 @@ export default class Game {
                     if ($user.username !== this.config.Dev && this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level > 100) {
                         this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Level = 100;
                     }
+                    this.tm.updateEvolution(targetUser, $room);
                     const pkmn = this.tm.PokemonTrainers.get(targetUser)!.Pokemon;
                     pkmn.updateStats();
                     $kv.set("PokemonTrainerDTO", this.tm.saveData());
@@ -292,18 +294,24 @@ export default class Game {
             Messenger.sendInfoMessage($room, `You successfully caught a ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name}, congrats! Treat it well, fellow trainer.`);
         } else if (this.tm.PokemonTrainers.has($user.username)) {
             const trainer = this.tm.PokemonTrainers.get($user.username)!;
-            if (trainer.BuyStoneConfirmation === true && $tip.tokens === this.settings.stone_price) {
+            if ($tip.tokens === this.settings.move_price) {
+                const move = trainer.Pokemon.GetRandomMove();
+                trainer.Pokemon.Move = move;
+                Messenger.sendInfoMessage($room, `You just purchased a new move, ${move.Name}!`, $user.username);
+            } else if ($tip.tokens === this.settings.stone_price) {
+                //todo make less accident prone
                 Messenger.sendInfoMessage($room, "You just purchased a " + trainer.Pokemon.Types[0].Stone + "!", $user.username);
-                trainer.BuyStoneWarning = false;
-                trainer.BuyStoneConfirmation = false;
-                this.tm.EvolvePokemonOfUser($user.username,$room);
-            } else if (trainer.BuyReviveConfirmation === true && $tip.tokens === this.settings.revive_price) {
-                trainer.BuyReviveWarning = false;
-                trainer.BuyReviveConfirmation = false;
-                trainer.Pokemon.Fainted = false;
-                trainer.Pokemon.FaintedAt = null;
-                trainer.Pokemon.updateStats();
-                Messenger.sendInfoMessage($room, `Your ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name} has been revived!`, $user.username);
+                if(trainer.Pokemon.UsesStone){
+                    this.tm.EvolvePokemonOfUser($user.username,$room);
+                }
+            } else if ($tip.tokens === this.settings.revive_price) {
+                if(trainer.Pokemon.Fainted){
+                    trainer.Pokemon.Fainted = false;
+                    trainer.Pokemon.FaintedAt = null;
+                    this.tm.updateEvolution($user.username, $room);
+                    trainer.Pokemon.updateStats();
+                    Messenger.sendInfoMessage($room, `Your ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name} has been revived!`, $user.username);
+                }
             }
         }
         $kv.set("PokemonTrainerDTO", this.tm.saveData());
@@ -317,12 +325,10 @@ export default class Game {
             const trainer = this.tm.PokemonTrainers.get($user.username)!;
             trainer.Tipped += $tip.tokens;
             const newLevels = Math.floor($tip.tokens / this.settings.level_pokemon);
-            if(newLevels){
+            if(newLevels > 0 && newLevels <= 100){
                 this.tm.LevelUpPokemonOfUser($user.username, $room, newLevels);
-                const newPokemon = trainer.Pokemon;
-                Messenger.sendInfoMessage($room,`Your ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name} has leveled up to ${newPokemon.Level}!`, $user.username);
-                if (newPokemon.Fainted) {
-                    Messenger.sendInfoMessage($room, `Your pokemon is still fainted! Use /revive to revive it for ${this.settings.revive_price} tokens.`, $user.username);
+                if (trainer.Pokemon.Fainted) {
+                    Messenger.sendInfoMessage($room, `Your pokemon is still fainted! Get a Rivive Potion from the pokeshop.`, $user.username);
                 }
             }
         }
@@ -340,6 +346,7 @@ export default class Game {
         this.settings.level_pokemon              = $settings.level_pokemon;
         this.settings.stone_price                = $settings.stone_price;
         this.settings.revive_price               = $settings.revive_price;
+        this.settings.move_price                 = $settings.move_price;
         this.settings.fanclub_auto_catch         = $settings.fanclub_auto_catch;
         if($settings.elite_four_1 != null){
         this.settings.elite_four_1 = $settings.elite_four_1.toLowerCase();

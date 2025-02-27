@@ -1,7 +1,7 @@
 # Help out extending the list of available Pokemon!
 
 ### The Format of the Pokemon inside my code:
-new Pokemon(PokeDex#, "Name of the Pokemon", [Types.Type1, Types.Type2], Rarity.RariryOfPokemon, BaseLevel, EvolutionStage, EvolvesAtLevel, "PokeDex Description Text", TrueOrFalse:TradeToEvolve?, TrueOrFalse:EvolutionStoneToEvolve?, BaseAtk, BaseDef, BaseHP, [Moves.AvailableMove1, Moves.AvailableMove2])
+new Pokemon(PokeDex#, "Name of the Pokemon", [Types.Type1, Types.Type2], Rarity.RarityOfPokemon, BaseLevel, EvolutionStage, EvolvesAtLevel, "PokeDex Description Text", TrueOrFalse:TradeToEvolve?, TrueOrFalse:EvolutionStoneToEvolve?, BaseAtk, BaseDef, BaseHP, [Moves.AvailableMove1, Moves.AvailableMove2])
 
 ### Real Example of Pikachu and Charizard:
 ``` typescript
@@ -33,7 +33,7 @@ export class Pokemon {
         public Name: string,
         // tslint:disable-next-line:no-shadowed-variable
         public Types: Type[],
-        public Rariry: Rarity = Rarity.Common,
+        public Rarity: Rarity = Rarity.Common,
         public Level = 1,
         public Stage: 1|2|3 = 1,
         public Evolves = 0,
@@ -45,7 +45,7 @@ export class Pokemon {
         public BaseLife = 40,
         public availableMoves: Move[] = [Moves.Scratch, Moves.Pound],
     ) {
-        this.Move = this.availableMoves[Math.floor(Math.random() * this.availableMoves.length)];
+        this.Move = this.GetRandomMove();
         this.Atk = BaseAtk;
         this.Def = BaseDef;
         this.Life = BaseLife;

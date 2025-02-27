@@ -6,12 +6,12 @@ import { SettingsLocal } from "../definitions/settingslocal";
 
 export default class Banner {
     private startMessage =  `Pokemon Collector (with Tokens :P)!
-                            '/level <username>' to see a Pokemon's level.
                             '/identify <username>' uses the Pokedex.
                             '/attack <username>' to attack your foe!
                             '/release' to remove your Pokemon :(...
-                            '/revive' to restore your Pokemon!
-                            Prices:\n`;
+                            '/trade <username>' to propose a trade.
+                            '/pokeshop to buy items.
+                            'Prices:\n`;
 
     public sendBanner(settings :SettingsLocal, $room : Room, user?: string): void {
         const tempPrices = [settings.catch_pokemon, settings.uncommon_tip, settings.rare_tip, settings.legendary_tip, settings.mystic_tip];
@@ -19,7 +19,7 @@ export default class Banner {
 
         for (const price of tempPrices) {
             const pkmn = Pokemons[PokeDex.GetRandomPokemon(settings, price)];
-            pricesMessage += `:pkmnball Catch ${pkmn.Rariry.toString()} for ${price} Tokens! ${PokeDex.GetPokemonIcon(pkmn)}\n`;
+            pricesMessage += `:pkmnball Catch ${pkmn.Rarity.toString()} for ${price} Tokens! ${PokeDex.GetPokemonIcon(pkmn)}\n`;
         }
 
         if (user !== undefined){

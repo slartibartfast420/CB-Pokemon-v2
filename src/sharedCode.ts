@@ -15,25 +15,25 @@ const app : App = {
     Prefix: "/",
     CMDS: {
         ADDUSER: "adduser",
+        REVIVEUSER: "reviveuser",
         LEVELUP: "levelup",
         EVOLVE: "evolve",
         CHANGE: "change",
-        REVIVE: "revive",
+        SENDHELP: "sendhelp",
         REMOVE: "remove",
-        RELEASE: "release",
-        GETNEWPKMN: "getnewpkmn",
+
         LISTTRAINERS: "listtrainers",
         LISTELITEFOUR: "listelitefour",
-        IDENTIFY: "identify",
         SUPPORT: "support",
-        BUYSTONE: "buystone",
+
+        RELEASE: "release",
+        GETNEWPKMN: "getnewpkmn",
+        IDENTIFY: "identify",
         TRADE: "trade",
-        LEVEL: "level",
         ATTACK: "attack",
-        SENDHELP: "sendhelp",
+        POKESHOP: "pokeshop",
         ACCEPT: "-accept",
         DECLINE: "-decline",
-        REVIVEUSER: "reviveuser",
     },
 };
 export const game = new Game(app);

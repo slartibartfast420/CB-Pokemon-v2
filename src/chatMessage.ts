@@ -4,7 +4,6 @@ import {$room} from "./api/$room";
 import { $settings, Settings } from "./api/$settings";
 import {$user} from "./api/$user";
 import {game} from "./sharedCode";
-//import { Settings } from "./definitions/Settings";
 /** React when a message is published in chat. */
 if ($message.orig.trim().indexOf("/") == 0){
     const args = $message.orig.trim().slice(1).split(/\s+/g);
@@ -47,23 +46,11 @@ if ($message.orig.trim().indexOf("/") == 0){
             game.userCommands(command,args,$user,$room,$kv);
             break;
         }
-        case game.config.CMDS.REVIVE: {
-            game.userCommands(command,args,$user,$room,$kv);
-            break;
-        }
         case game.config.CMDS.IDENTIFY: {
             game.userCommands(command,args,$user,$room,$kv);
             break;
         }
-        case game.config.CMDS.BUYSTONE: {
-            game.userCommands(command,args,$user,$room,$kv);
-            break;
-        }
         case game.config.CMDS.TRADE: {
-            game.userCommands(command,args,$user,$room,$kv);
-            break;
-        }
-        case game.config.CMDS.LEVEL: {
             game.userCommands(command,args,$user,$room,$kv);
             break;
         }
@@ -76,6 +63,14 @@ if ($message.orig.trim().indexOf("/") == 0){
             break;
         }
         case game.config.CMDS.LISTELITEFOUR: {
+            game.userCommands(command,args,$user,$room,$kv);
+            break;
+        }
+        case game.config.CMDS.GETNEWPKMN: {
+            game.userCommands(command,args,$user,$room,$kv);
+            break;
+        }
+        case game.config.CMDS.POKESHOP: {
             game.userCommands(command,args,$user,$room,$kv);
             break;
         }

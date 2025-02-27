@@ -30,11 +30,21 @@ export default class TrainerManager {
         this.PokemonTrainers.delete(user);
     }
 
-    public LevelUpPokemonOfUser(user: string, $room, numberOfLevels: number) {
+    public LevelUpPokemonOfUser(user: string, $room: Room, numberOfLevels: number) {
         if (this.PokemonTrainers.has(user)) {
-            this.PokemonTrainers.get(user)!.Pokemon.LvlUp(numberOfLevels);
-            while (this.PokemonTrainers.get(user)!.Pokemon.Evolves !== 0 && this.PokemonTrainers.get(user)!.Pokemon.Level >= this.PokemonTrainers.get(user)!.Pokemon.Evolves) {
-                this.EvolvePokemonOfUser(user,$room);
+            const oldPokemon = this.PokemonTrainers.get(user)!.Pokemon;
+            const wasLeveled = oldPokemon.LvlUp(numberOfLevels);
+            if(wasLeveled){
+                Messenger.sendInfoMessage($room, `Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has leveled up to level ${oldPokemon.Level}!`, user);
+            }
+            this.updateEvolution(user, $room);
+        }
+    }
+    public updateEvolution(user: string, $room: Room, force = false) {
+        if (this.PokemonTrainers.has(user)) {
+            const pokemon = this.PokemonTrainers.get(user)!.Pokemon;
+            if (!pokemon.Fainted && (force || (pokemon.Evolves !== 0 && pokemon.Level >= pokemon.Evolves))) {
+                this.EvolvePokemonOfUser(user, $room);
             }
         }
     }
@@ -45,13 +55,13 @@ export default class TrainerManager {
             const newPokemon = this.EvolvePokemon(oldPokemon);
             this.PokemonTrainers.get(user)!.Pokemon = newPokemon;
 
-            Messenger.sendInfoMessage($room,`Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`);
-            Messenger.sendInfoMessage($room,PokeDex.GetEvolutionText(newPokemon));
+            Messenger.sendInfoMessage($room,`Your ${PokeDex.GetPokemonIcon(oldPokemon)} ${oldPokemon.Name} has evolved into a ${PokeDex.GetPokemonIcon(newPokemon)} ${newPokemon.Name}!`, user);
+            Messenger.sendInfoMessage($room,PokeDex.GetEvolutionText(newPokemon), user);
         }
     }
 
     public EvolvePokemon(pokemon: Pokemon): Pokemon {
-        if (pokemon.Evolves === 0) {
+        if (pokemon.Evolves === 0 && !pokemon.TradeEvolve && !pokemon.UsesStone) {
             return pokemon;
         }
         const newPokemon = Pokemons[pokemon.Id + 1].Clone();
@@ -108,8 +118,9 @@ export default class TrainerManager {
         const exportdata: PokemonTrainerDTO[] = [];
         this.PokemonTrainers.forEach((trainer) => {
             const pokemonDTO = new PokemonDTO(trainer.Pokemon.Id, trainer.Pokemon.Life, trainer.Pokemon.Move.Name, trainer.Pokemon.Level, trainer.Pokemon.Petname, trainer.Pokemon.CaughtAt, trainer.Pokemon.Fainted, trainer.Pokemon.FaintedAt);
-            exportdata.push(new PokemonTrainerDTO(trainer.User, pokemonDTO, trainer.Tipped, trainer.BuyStoneWarning, trainer.BuyStoneConfirmation, trainer.BuyReviveWarning, trainer.BuyReviveConfirmation, trainer.TrainerSince, trainer.TradeRequestedAt, trainer.TradeRequestReceivedFrom));
+            exportdata.push(new PokemonTrainerDTO(trainer.User, pokemonDTO, trainer.Tipped, trainer.TrainerSince, trainer.TradeRequestedAt, trainer.TradeRequestReceivedFrom));
         });
+       
 
         return exportdata;
     }
@@ -122,26 +133,22 @@ export default class TrainerManager {
                     trainer.Pokemon.CaughtAt = new Date();
                     trainer.Pokemon.FaintedAt = null;
                     trainer.Pokemon.Fainted = false;
-                    trainer.BuyReviveWarning = false;
-                    trainer.BuyReviveConfirmation = false;
                 }
                 const pokemon = origin.Clone(trainer.Pokemon.CaughtAt);
                 const move = pokemon.availableMoves.find((m) => m.Name === trainer.Pokemon.Move);
                 if (move !== undefined) {
                     pokemon.Move = move;
                 }
-                pokemon.Life = trainer.Pokemon.Life;
+                
                 pokemon.Level = trainer.Pokemon.Level;
                 pokemon.Petname = trainer.Pokemon.Petname;
                 pokemon.CaughtAt = trainer.Pokemon.CaughtAt;
                 pokemon.Fainted = trainer.Pokemon.Fainted;
                 pokemon.FaintedAt = trainer.Pokemon.FaintedAt;
+                pokemon.updateStats();
+                pokemon.Life = trainer.Pokemon.Life;
 
                 const pokemontrainer = new PokemonTrainer(trainer.User, pokemon, trainer.Tipped);
-                pokemontrainer.BuyStoneConfirmation = trainer.BuyStoneConfirmation;
-                pokemontrainer.BuyStoneWarning = trainer.BuyStoneWarning;
-                pokemontrainer.BuyReviveConfirmation = trainer.BuyReviveConfirmation;
-                pokemontrainer.BuyReviveWarning = trainer.BuyReviveWarning;
                 pokemontrainer.TradeRequestReceivedFrom = trainer.TradeRequestReceivedFrom;
                 pokemontrainer.TradeRequestedAt = trainer.TradeRequestedAt;
                 pokemontrainer.TrainerSince = trainer.TrainerSince;

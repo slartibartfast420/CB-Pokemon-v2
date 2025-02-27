@@ -11,27 +11,35 @@ export default class PokeDex {
     }
 
     public static IdentifyPokemon(pokemon: Pokemon): string {
-        return `PokeDex Entry #${pokemon.Id}: ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} - ${pokemon.Rariry}, ${pokemon.Types[0].Name} - ${pokemon.Description}`;
+        return `PokeDex Entry #${pokemon.Id}: ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} - ${pokemon.Rarity}, ${pokemon.Types[0].Name} - ${pokemon.Description}`;
     }
 
     public static GetEvolutionText(pokemon: Pokemon): string {
         if (!pokemon.TradeEvolve && !pokemon.UsesStone && pokemon.Evolves === 0) {
-            return `Your ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} doesn't evolve anymore...`;
+            return `${this.GetPokemonIcon(pokemon)} ${pokemon.Name} doesn't evolve anymore...`;
         }
 
         if (pokemon.TradeEvolve) {
-            return `Your ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} evolves by trading with another user. To trade with someone, use the command /trade {username}`;
+            return `${this.GetPokemonIcon(pokemon)} ${pokemon.Name} evolves by trading with another user, using the command /trade {username}!`;
         }
 
         if (pokemon.UsesStone) {
-            return `Your ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} evolves by using a ${pokemon.Types[0].Stone}. To buy a stone, use the command '/buystone' to purchase one!`;
+            return `${this.GetPokemonIcon(pokemon)} ${pokemon.Name} evolves by using a ${pokemon.Types[0].Stone}. You can buy a stone in the pokeshop!`;
         }
 
         if (pokemon.Evolves > 0 && pokemon.Evolves > pokemon.Level) {
-            return `Your ${this.GetPokemonIcon(pokemon)} ${pokemon.Name} evolves by leveling up. Tip for level ups until your pokemon reaches level ${pokemon.Evolves}.`;
+            return `${this.GetPokemonIcon(pokemon)} ${pokemon.Name} evolves by leveling up to ${pokemon.Evolves}.`;
         }
 
         return "Evolution is a weird thing, isn't it...";
+    }
+
+    public static GetPokemonStats(pokemon: Pokemon): string {
+        return `${this.GetPokemonIcon(pokemon)} ${pokemon.Name} - Level: ${pokemon.Level} | HP: ${pokemon.Life} | ATK: ${pokemon.Atk} | DEF: ${pokemon.Def}`;
+    }
+
+    public static GetMoveStats(pokemon: Pokemon): string {
+        return `${this.GetPokemonIcon(pokemon)} ${pokemon.Name}'s Move: ${pokemon.Move.Name} - Power: ${pokemon.Move.Power} | Type: ${pokemon.Move.Type.Name}`;
     }
 
     public static GetRandomPokemon(settings : SettingsLocal, tipAmount = 0, ): number {
@@ -52,8 +60,8 @@ export default class PokeDex {
     public static GetRandomPokemonOfRarity(rarity: Rarity): number {
         let random = 0;
 
-        while (random === 0 || Pokemons[random].Rariry !== rarity) {
-            random = Math.floor(Math.random() * Pokemons.length);
+        while (random === 0 || Pokemons[random].Rarity !== rarity) {
+            random = Math.ceil(Math.random() * Pokemons.length - 1);
         }
 
         return random;

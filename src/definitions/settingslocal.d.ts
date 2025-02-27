@@ -12,6 +12,7 @@ export interface Settings {
   level_pokemon: number;
   stone_price: number;
   revive_price: number;
+  move_price: number;
   fanclub_auto_catch: boolean;
   elite_four_1: string;
   elite_four_1_pokemon: number;

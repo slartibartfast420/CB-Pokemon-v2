@@ -9,7 +9,7 @@ export class Pokemon {
     public Def: number;
     public Life: number;
     public Fainted: boolean;
-    public FaintedAt: Date;
+    public FaintedAt: Date | null = null;
     public CaughtAt: Date;
 
     constructor(
@@ -17,7 +17,7 @@ export class Pokemon {
         public Name: string,
         // tslint:disable-next-line:no-shadowed-variable
         public Types: Type[],
-        public Rariry: Rarity = Rarity.Common,
+        public Rarity: Rarity = Rarity["A Common Pokemon"],
         public Level = 1,
         public Stage: 1|2|3 = 1,
         public Evolves = 0,
@@ -29,17 +29,19 @@ export class Pokemon {
         public BaseLife = 40,
         public availableMoves: Move[] = [Moves.Scratch, Moves.Pound],
     ) {
-        this.Move = this.availableMoves[Math.floor(Math.random() * this.availableMoves.length)];
+        this.Move = this.GetRandomMove();
         this.Atk = BaseAtk;
         this.Def = BaseDef;
         this.Life = BaseLife;
-        this.CaughtAt = new Date(),
+        this.CaughtAt = new Date();
         this.Fainted = false;
         this.FaintedAt = null;
 
-        this.updateStats();
+        //this.updateStats();
     }
-
+    public GetRandomMove(): Move {
+        return this.availableMoves[Math.floor(Math.random() * this.availableMoves.length)];
+    }
     public Attack(foe: Pokemon): number {
         let precalc;
 
@@ -97,38 +99,43 @@ export class Pokemon {
         foe.Life = Math.round(foe.Life - damage);
         if(foe.Life <= 0) {
             foe.Fainted = true;
+            foe.Life = 0;
+            foe.FaintedAt = new Date();
         }
-        return foe.Life;
+        return Math.round(damage);
     }
 
     public updateStats() {
-        this.Life = Math.round(this.BaseLife * 2 * this.Level / 100 + 10 + this.Level);
-        this.Atk = Math.round(this.BaseAtk * 2 * this.Level / 100 + 5);
-        this.Def = Math.round(this.BaseDef * 2 * this.Level / 100 + 5);
+        if(!this.Fainted){
+            this.Life = Math.round(this.BaseLife * 2 * this.Level / 100 + 10 + this.Level);
+            this.Atk = Math.round(this.BaseAtk * 2 * this.Level / 100 + 5);
+            this.Def = Math.round(this.BaseDef * 2 * this.Level / 100 + 5);
+        }
     }
 
-    public LvlUp(numberOfLevels: number): number {
+    public LvlUp(numberOfLevels: number): boolean {
         if (this.Level < 100) {
             if ((this.Level + numberOfLevels) < 100) {
                 this.Level += numberOfLevels;
             } else {
                 this.Level = 100;
             }
+            this.updateStats();
+            return true;
+        } else {
+            return false;
         }
-
-        this.updateStats();
-        return this.Level;
     }
 
     public Clone(keepDate? : Date): Pokemon {
-        const pkmn = new Pokemon(this.Id, this.Name, this.Types, this.Rariry, this.Level, this.Stage, this.Evolves, this.Description, this.TradeEvolve, this.UsesStone, this.BaseAtk, this.BaseDef, this.BaseLife, this.availableMoves);
+        const pkmn = new Pokemon(this.Id, this.Name, this.Types, this.Rarity, this.Level, this.Stage, this.Evolves, this.Description, this.TradeEvolve, this.UsesStone, this.BaseAtk, this.BaseDef, this.BaseLife, this.availableMoves);
         pkmn.Petname = this.Petname;
         if (keepDate) {
             pkmn.CaughtAt = keepDate;
         } else {
             pkmn.CaughtAt = new Date();
         }
-        pkmn.updateStats();
+        //pkmn.updateStats();
         return pkmn;
     }
 }
@@ -154,7 +161,7 @@ const InternPokemon = [
     new Pokemon(16, "Pidgey", [Types.Normal, Types.Flying], Rarity.Common, 1, 1, 18, "A common sight in forests and woods. It flaps its wings at ground level to kick up blinding sand.", false, false, 45, 40, 40, [Moves.Tackle, Moves.SandAttack, Moves.Gust, Moves.QuickAttack, Moves.Whirlwind, Moves.Twister, Moves.FeatherDance, Moves.Agility, Moves.WingAttack, Moves.Roost, Moves.Tailwind, Moves.MirrorMove, Moves.AirSlash, Moves.Hurricane, Moves.AirCutter, Moves.AirSlash, Moves.BraveBird, Moves.Defog, Moves.FeintAttack, Moves.Foresight, Moves.Pursuit, Moves.SteelWing, Moves.Uproar]), // Pkmn #016
     new Pokemon(17, "Pidgeotto", [Types.Normal, Types.Flying], Rarity.Uncommon, 1, 2, 36, "Very protective of its sprawling territorial area, this Pokémon will fiercely peck at any intruder.", false, false, 60, 55, 63, [Moves.Tackle, Moves.SandAttack, Moves.Gust, Moves.SandAttack, Moves.Gust, Moves.QuickAttack, Moves.Whirlwind, Moves.Twister, Moves.FeatherDance, Moves.Agility, Moves.WingAttack, Moves.Roost, Moves.Tailwind, Moves.MirrorMove, Moves.AirSlash, Moves.Hurricane, Moves.AirCutter, Moves.AirSlash, Moves.BraveBird, Moves.Defog, Moves.FeintAttack, Moves.Foresight, Moves.Pursuit, Moves.SteelWing, Moves.Uproar]), // Pkmn #017
     new Pokemon(18, "Pidgeot", [Types.Normal, Types.Flying], Rarity.Rare, 1, 3, 0, "When hunting, it skims the surface of water at high speed to pick off unwary prey such as Magikarp.", false, false, 80, 75, 83, [Moves.Hurricane, Moves.Tackle, Moves.SandAttack, Moves.Gust, Moves.QuickAttack, Moves.SandAttack, Moves.Gust, Moves.QuickAttack, Moves.Whirlwind, Moves.Twister, Moves.FeatherDance, Moves.Agility, Moves.WingAttack, Moves.Roost, Moves.Tailwind, Moves.MirrorMove, Moves.AirSlash, Moves.Hurricane, Moves.AirCutter, Moves.AirSlash, Moves.BraveBird, Moves.Defog, Moves.FeintAttack, Moves.Foresight, Moves.Pursuit, Moves.SteelWing, Moves.Uproar]), // Pkmn #018
-    new Pokemon(19, "Rattata", [Types.Normal], Rarity.Common, 1, 1, 20, "Bites anything when it attacks. Small and very quick, it is a common sight in many places.", false, false, 56, 35, 30), // Pkmn #019
+    new Pokemon(19, "Rattata", [Types.Normal], Rarity.Common, 1, 1, 20, "Bites anything when it attacks. Small and very quick, it is a common sight in many places.", false, false, 56, 35, 30, [Moves.Tackle, Moves.TailWhip, Moves.QuickAttack, Moves.HyperFang, Moves.FocusEnergy, Moves.SuperFang, Moves.Crunch, Moves.Assurance, Moves.SuckerPunch, Moves.DoubleEdge]), // Pkmn #019
     new Pokemon(20, "Raticate", [Types.Normal], Rarity.Uncommon, 1, 2, 0, "It uses its whiskers to maintain its balance. It apparently slows down if they are cut off.", false, false, 81, 60, 55), // Pkmn #020
     new Pokemon(21, "Spearow", [Types.Normal, Types.Flying], Rarity.Common, 1, 1, 20, "Eats bugs in grassy areas. It has to flap its short wings at high speed to stay airborne.", false, false, 60, 30, 40, [Moves.Peck, Moves.Growl, Moves.Leer, Moves.FuryAttack, Moves.Pursuit, Moves.AerialAce, Moves.MirrorMove, Moves.Agility, Moves.Assurance, Moves.Roost, Moves.DrillPeck, Moves.Astonish, Moves.FeatherDance, Moves.FeintAttack, Moves.QuickAttack, Moves.RazorWind, Moves.ScaryFace, Moves.SkyAttack, Moves.SteelWing, Moves.TriAttack, Moves.Uproar, Moves.Whirlwind]), // Pkmn #021
     new Pokemon(22, "Fearow", [Types.Normal, Types.Flying], Rarity.Uncommon, 1, 2, 0, "With its huge and magnificent wings, it can keep aloft without ever having to land for rest.", false, false, 90, 65, 65, [Moves.DrillRun, Moves.Pluck, Moves.Peck, Moves.Growl, Moves.Leer, Moves.FuryAttack, Moves.Leer, Moves.FuryAttack, Moves.Pursuit, Moves.AerialAce, Moves.MirrorMove, Moves.Agility, Moves.Assurance, Moves.Roost, Moves.DrillPeck, Moves.DrillRun, Moves.Astonish, Moves.FeatherDance, Moves.FeintAttack, Moves.QuickAttack, Moves.RazorWind, Moves.ScaryFace, Moves.SkyAttack, Moves.SteelWing, Moves.TriAttack, Moves.Uproar, Moves.Whirlwind]), // Pkmn #022
@@ -244,8 +251,8 @@ const InternPokemon = [
     new Pokemon(106, "Hitmonlee", [Types.Fighting], Rarity.Rare, 1, 1, 0, "When in a hurry, its legs lengthen progressively. It runs smoothly with extra long, loping strides.", false, false, 120, 53, 50, [Moves.Reversal, Moves.CloseCombat, Moves.MegaKick, Moves.Revenge, Moves.DoubleKick, Moves.Meditate, Moves.RollingKick, Moves.JumpKick, Moves.BrickBreak, Moves.FocusEnergy, Moves.Feint, Moves.HighJumpKick, Moves.MindReader, Moves.Foresight, Moves.WideGuard, Moves.BlazeKick, Moves.Endure, Moves.MegaKick, Moves.CloseCombat, Moves.Reversal, Moves.BulletPunch, Moves.Counter, Moves.Endure, Moves.Feint, Moves.HighJumpKick, Moves.MachPunch, Moves.MindReader, Moves.Pursuit, Moves.RapidSpin, Moves.VacuumWave]), // Pkmn #106
     new Pokemon(107, "Hitmonchan", [Types.Fighting], Rarity.Rare, 1, 1, 0, "While apparently doing nothing, it fires punches in lightning fast volleys that are impossible to see.", false, false, 105, 79, 50, [Moves.CloseCombat, Moves.Counter, Moves.FocusPunch, Moves.Revenge, Moves.CometPunch, Moves.Agility, Moves.Pursuit, Moves.MachPunch, Moves.BulletPunch, Moves.Feint, Moves.VacuumWave, Moves.QuickGuard, Moves.ThunderPunch, Moves.IcePunch, Moves.FirePunch, Moves.SkyUppercut, Moves.MegaPunch, Moves.Detect, Moves.FocusPunch, Moves.Counter, Moves.CloseCombat, Moves.BulletPunch, Moves.Counter, Moves.Endure, Moves.Feint, Moves.HighJumpKick, Moves.MachPunch, Moves.MindReader, Moves.Pursuit, Moves.RapidSpin, Moves.VacuumWave]), // Pkmn #107
     new Pokemon(108, "Lickitung", [Types.Normal], Rarity.Uncommon, 1, 1, 0, "Its tongue can be extended like a chameleon's. It leaves a tingling sensation when it licks enemies.", false, false, 55, 75, 90, [Moves.Lick, Moves.Supersonic, Moves.DefenseCurl, Moves.KnockOff, Moves.Wrap, Moves.Stomp, Moves.Disable, Moves.Slam, Moves.Rollout, Moves.ChipAway, Moves.MeFirst, Moves.Refresh, Moves.Screech, Moves.PowerWhip, Moves.WringOut, Moves.Amnesia, Moves.Belch, Moves.BellyDrum, Moves.BodySlam, Moves.Curse, Moves.HammerArm, Moves.Magnitude, Moves.MuddyWater, Moves.SleepTalk, Moves.SmellingSalts, Moves.Snore, Moves.ZenHeadbutt]), // Pkmn #108
-    new Pokemon(109, "Koffing", [Types.Poison], Rarity.Common, 1, 1, 35, "Because it stores several kinds of toxic gases in its body, it is prone to exploding without warning.", false, false, 65, 95, 40), // Pkmn #109
-    new Pokemon(110, "Weezing", [Types.Poison], Rarity.Uncommon, 1, 2, 0, "Where two kinds of poison gases meet, 2 KOFFINGs can fuse into a WEEZING over many years.", false, false, 90, 120, 65), // Pkmn #110
+    new Pokemon(109, "Koffing", [Types.Poison], Rarity.Common, 1, 1, 35, "Because it stores several kinds of toxic gases in its body, it is prone to exploding without warning.", false, false, 65, 95, 40, [Moves.Tackle, Moves.Smog, Moves.Smokescreen, Moves.Sludge, Moves.SelfDestruct, Moves.Haze, Moves.PoisonGas, Moves.Toxic, Moves.SludgeBomb, Moves.Explosion, Moves.DestinyBond]), // Pkmn #109
+    new Pokemon(110, "Weezing", [Types.Poison], Rarity.Uncommon, 1, 2, 0, "Where two kinds of poison gases meet, 2 KOFFINGs can fuse into a WEEZING over many years.", false, false, 90, 120, 65, [Moves.Tackle, Moves.Smokescreen, Moves.Sludge, Moves.SelfDestruct, Moves.Haze, Moves.Explosion, Moves.SludgeBomb, Moves.Toxic, Moves.PoisonGas, Moves.Smog, Moves.ClearSmog, Moves.Belch, Moves.Memento, Moves.DestinyBond]), // Pkmn #110
     new Pokemon(111, "Rhyhorn", [Types.Rock, Types.Ground ], Rarity.Common, 1, 1, 42, `Rhyhorn’s brain is very small. It is so dense, while on a run it forgets why it started running in the first place. It apparently remembers sometimes if it demolishes something.`, false, false, 85, 95, 80, [Moves.SwordsDance, Moves.Stomp, Moves.HornAttack, Moves.FuryAttack, Moves.HornDrill, Moves.TakeDown, Moves.Thrash, Moves.TailWhip, Moves.Leer, Moves.Counter, Moves.Earthquake, Moves.SkullBash, Moves.RockSlide, Moves.Curse, Moves.Reversal, Moves.ScaryFace, Moves.Magnitude, Moves.Megahorn, Moves.Pursuit, Moves.IronTail, Moves.Crunch, Moves.CrushClaw, Moves.RockBlast, Moves.MetalBurst, Moves.DragonRush, Moves.ThunderFang, Moves.IceFang, Moves.FireFang, Moves.RockClimb, Moves.StoneEdge, Moves.GuardSplit, Moves.SmackDown, Moves.ChipAway, Moves.Bulldoze, Moves.DrillRun, Moves.Rototiller ]), // Pkmn #111
     new Pokemon(112, "Rhydon", [Types.Rock, Types.Ground ], Rarity.Uncommon, 42, 2, 0, `Rhydon has a horn that serves as a drill. It is used for destroying rocks and boulders. This Pokémon occasionally rams into streams of magma, but the armor-like hide prevents it from feeling the heat.`, true, false, 130, 120, 105, [Moves.Stomp, Moves.HornAttack, Moves.FuryAttack, Moves.HornDrill, Moves.TakeDown, Moves.TailWhip, Moves.Leer, Moves.Earthquake, Moves.ScaryFace, Moves.Megahorn, Moves.RockBlast, Moves.HammerArm, Moves.StoneEdge, Moves.SmackDown, Moves.ChipAway, Moves.Bulldoze, Moves.DrillRun ]), // Pkmn #112
     new Pokemon(113, "Chansey", [Types.Normal ], Rarity.Rare, 1, 1, 0, `Not only are these Pokémon fast runners, they’re also few in number, so anyone who finds one must be lucky indeed.`, false, false, 5, 5, 250, [Moves.Pound, Moves.DoubleSlap, Moves.TakeDown, Moves.DoubleEdge, Moves.TailWhip, Moves.Growl, Moves.Sing, Moves.Counter, Moves.SeismicToss, Moves.Minimize, Moves.DefenseCurl, Moves.LightScreen, Moves.Metronome, Moves.EggBomb, Moves.SoftBoiled, Moves.Substitute, Moves.Endure, Moves.HealBell, Moves.Present, Moves.HelpingHand, Moves.Refresh, Moves.Aromatherapy, Moves.Gravity, Moves.HealingWish, Moves.NaturalGift, Moves.Fling, Moves.MudBomb, Moves.HealPulse, Moves.Bestow ]), // Pkmn #113
@@ -288,7 +295,8 @@ const InternPokemon = [
     new Pokemon(150, "Mewtwo", [Types.Psychic ], Rarity.Legendary, 80, 1, 0, `Mewtwo is a Pokémon that was created by genetic manipulation. However, even though the scientific power of humans created this Pokémon’s body, they failed to endow Mewtwo with a compassionate heart.`, false, false, 110, 90, 106, [Moves.Disable, Moves.Mist, Moves.Confusion, Moves.Psychic, Moves.Recover, Moves.Barrier, Moves.Swift, Moves.Amnesia, Moves.Psywave, Moves.Safeguard, Moves.PsychUp, Moves.FutureSight, Moves.MiracleEye, Moves.MeFirst, Moves.PowerSwap, Moves.GuardSwap, Moves.AuraSphere, Moves.PsychoCut, Moves.Psystrike, Moves.LaserFocus ]), // Pkmn #150
     new Pokemon(151, "Mew", [Types.Psychic ], Rarity.Mystic, 80, 1, 0, `Mew is said to possess the genetic composition of all Pokémon. It is capable of making itself invisible at will, so it entirely avoids notice even if it approaches people.`, false, false, 100, 100, 100, [Moves.Pound, Moves.MegaPunch, Moves.Psychic, Moves.Barrier, Moves.Metronome, Moves.Amnesia, Moves.Transform, Moves.BatonPass, Moves.AncientPower, Moves.MeFirst, Moves.AuraSphere, Moves.NastyPlot, Moves.ReflectType ]), // Pkmn #151
     new Pokemon(152, "Chikorita", [Types.Grass ], Rarity.Common, 1, 1, 0, `It loves to bask in the sunlight. It uses the leaf on its head to seek out warm places.`, false, false, 49, 65, 45, [Moves.Growl, Moves.Tackle, Moves.RazorLeaf, Moves.PoisonPowder, Moves.Synthesis, Moves.Reflect, Moves.MagicalLeaf, Moves.LeechSeed, Moves.SweetScent, Moves.LightScreen, Moves.BodySlam, Moves.Safeguard, Moves.GigaDrain, Moves.SolarBeam ]),
-
+   // new Pokemon(153, "Bayleef", [Types.Grass ], Rarity.Uncommon, 1, 2, 0, `A spicy aroma emanates from around its neck. The aroma acts as a stimulant to restore health.`, false, false, 62, 80, 60, [Moves.Growl, Moves.Tackle, Moves.RazorLeaf, Moves.PoisonPowder, Moves.Synthesis, Moves.Reflect, Moves.MagicalLeaf, Moves.LeechSeed, Moves.SweetScent, Moves.LightScreen, Moves.BodySlam, Moves.Safeguard, Moves.GigaDrain, Moves.SolarBeam ]),
+   // new Pokemon(154, "Meganium", [Types.Grass ], Rarity.Rare, 1, 3, 0, `The fragrance of Meganium's flower soothes and calms emotions. In battle, it gives off more of its becalming scent.`, false, false, 82, 100, 80, [Moves.PetalDance, Moves.PetalBlizzard, Moves.Growl, Moves.Tackle, Moves.RazorLeaf, Moves.PoisonPowder, Moves.Synthesis, Moves.Reflect, Moves.MagicalLeaf, Moves.LeechSeed, Moves.SweetScent, Moves.LightScreen, Moves.BodySlam, Moves.Safeguard, Moves.GigaDrain, Moves.SolarBeam ]),
     // Specially requested.. until Gen4 is in.. this stays at the bottom x) TODO: Add sprite fot this one, gotta find them first tho, dunno about the gen2 onward.. finding the same is hard :S
     new Pokemon(491000, "Darkrai", [Types.Dark ], Rarity.Unobtainable, 80, 1, 0, `It can lull people to sleep and make them dream. It is active during nights of the new moon.`, false, false, 90, 90, 70, [Moves.Disable, Moves.Hypnosis, Moves.QuickAttack, Moves.NightShade, Moves.DoubleTeam, Moves.Haze, Moves.DreamEater, Moves.Nightmare, Moves.FeintAttack, Moves.Pursuit, Moves.Embargo, Moves.DarkPulse, Moves.NastyPlot, Moves.DarkVoid, Moves.OminousWind ]), // Pkmn #491
     // Cause I like this fella :))

@@ -14,6 +14,10 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
             try {
                 if(this.settings.fanclub_auto_catch && this.accessControl.hasClaim($user, "IN_FANCLUB")){
                     this.changeFreebiePokemonFanclub($user, $kv);
+                    const pto = $kv.get("PokemonTrainerDTO");
+                    this.tm.updateData(pto);
+                    const trainer = this.tm.PokemonTrainers.get($user.username)!;
+                    Messenger.sendInfoMessage($room, `You successfully caught a ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name}, congrats! Treat it well, fellow trainer.`, $user.username);
                 }
             } catch (err){
                 Messenger.sendErrorMessage($room, "Pokemon: You do not have permission to use this command.", $user.username);
@@ -36,14 +40,19 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
             break;
         }
         case this.config.CMDS.IDENTIFY: {
-            const [targetUser] = args;
+            let [targetUser] = args;
             try {
                 const pt = $kv.get("PokemonTrainerDTO");
                 this.tm.updateData(pt);
+                if (targetUser === "" || targetUser === undefined) {
+                    targetUser = $user.username;
+                }
                 if (this.tm.PokemonTrainers.has(targetUser)) {
-                    Messenger.sendMessageToUser($room, PokeDex.IdentifyPokemon(this.tm.PokemonTrainers.get(targetUser)!.Pokemon), $user.username);
-                } else if (targetUser === "" || targetUser === undefined) {
-                    Messenger.sendErrorMessage($room, "USAGE: '/identify <user>' where <user> should be the name of the user who's Pokemon you want to identify.", $user.username);
+                    const targetPokemon = this.tm.PokemonTrainers.get(targetUser)!.Pokemon;
+                    Messenger.sendMessageToUser($room, PokeDex.IdentifyPokemon(targetPokemon), $user.username);
+                    Messenger.sendMessageToUser($room, PokeDex.GetEvolutionText(targetPokemon), $user.username);
+                    Messenger.sendMessageToUser($room, PokeDex.GetPokemonStats(targetPokemon), $user.username);
+                    Messenger.sendMessageToUser($room, PokeDex.GetMoveStats(targetPokemon), $user.username);
                 } else {
                     Messenger.sendErrorMessage($room, "Huh? It looks like [" + targetUser + "] doesn't have a Pokemon. Check the user's spelling?", $user.username);
                 }
@@ -52,72 +61,24 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
             }
             break;
         }
-        case this.config.CMDS.BUYSTONE: {
+        case this.config.CMDS.POKESHOP: {
             const pt = $kv.get("PokemonTrainerDTO");
             this.tm.updateData(pt);
-            if(!this.tm.PokemonTrainers.has($user.username)){
-                Messenger.sendErrorMessage($room, "You don't have a Pokemon.", $user.username);
+                    
+            if(!this.tm.PokemonTrainers.has($user.username)) {
+                Messenger.sendErrorMessage($room, "You need to have a Pokemon first before visiting the shop!", $user.username);
                 break;
             }
 
             const trainer = this.tm.PokemonTrainers.get($user.username)!;
-            if (trainer.Pokemon.Fainted) {
-                Messenger.sendErrorMessage($room, "Your Pokemon is fainted and cannot use a stone. Revive it first!", $user.username);
-                break;
+            Messenger.sendInfoMessage($room, "Welcome to the Pokemon Shop!", $user.username);
+            if(trainer.Pokemon.Fainted) {
+                Messenger.sendInfoMessage($room, `[cb:tip amount=${this.settings.revive_price} message="Revive Potion"] (${this.settings.revive_price} tokens).`, $user.username);
             }
-
-            if (!trainer.Pokemon.UsesStone) {
-                Messenger.sendInfoMessage($room, "Your Pokemon does not evolve using a stone!", $user.username);
-                break;
+            if(trainer.Pokemon.UsesStone) {
+                Messenger.sendInfoMessage($room, `[cb:tip amount=${this.settings.stone_price} message="${trainer.Pokemon.Types[0].Stone}"] (${this.settings.stone_price} tokens).`, $user.username);
             }
-
-            if ($user.username === $room.owner) {
-                trainer.BuyStoneWarning = false;
-                trainer.BuyStoneConfirmation = true;
-                this.tm.EvolvePokemonOfUser($user.username, $room);
-                break;
-            }
-
-            if (trainer.BuyStoneWarning === true) {
-                Messenger.sendInfoMessage($room, "Okay, your next tip of " + this.settings.stone_price + " tokens will buy you a " + trainer.Pokemon.Types[0].Stone, $user.username);
-                trainer.BuyStoneConfirmation = true;
-                trainer.BuyStoneWarning = false;
-            } else {
-                Messenger.sendInfoMessage($room, "Are you sure you want to purchase a " + trainer.Pokemon.Types[0].Stone + "? It costs " + this.settings.stone_price + " tokens to purchase a stone. Type '/buystone' again to allow your next tip of " + this.settings.stone_price + " tokens to buy a " + trainer.Pokemon.Types[0].Stone, $user.username);
-                trainer.BuyStoneWarning = true;
-            }
-            break;
-        }
-        case this.config.CMDS.REVIVE: {
-            const pt = $kv.get("PokemonTrainerDTO");
-            this.tm.updateData(pt);
-            
-            if (!this.tm.PokemonTrainers.has($user.username)) {
-                Messenger.sendErrorMessage($room, "You don't have a Pokemon to revive.", $user.username);
-                break;
-            }
-
-            const trainer = this.tm.PokemonTrainers.get($user.username)!;
-            if (!trainer.Pokemon.Fainted) {
-                Messenger.sendErrorMessage($room, "Your Pokemon doesn't need reviving - it still has HP!", $user.username);
-                break;
-            }
-
-            if ($user.username === $room.owner) {
-                trainer.BuyReviveWarning = false;
-                trainer.BuyReviveConfirmation = true;
-                trainer.Pokemon.Fainted = false;
-                trainer.Pokemon.FaintedAt = null;
-                trainer.Pokemon.updateStats();
-                Messenger.sendSuccessMessage($room, "Your Pokemon has been revived!", $user.username);
-            } else if (trainer.BuyReviveWarning === true) {
-                Messenger.sendInfoMessage($room, `Your next tip of ${this.settings.revive_price} tokens will revive your Pokemon.`, $user.username);
-                trainer.BuyReviveConfirmation = true;
-                trainer.BuyReviveWarning = false;
-            } else {
-                Messenger.sendInfoMessage($room, `A revive potion costs ${this.settings.revive_price} tokens. Type '/revive' again to confirm purchase.`, $user.username);
-                trainer.BuyReviveWarning = true;
-            }
+            Messenger.sendInfoMessage($room, `[cb:tip amount=${this.settings.move_price} message="Get Random Move"] (${this.settings.move_price} tokens).`, $user.username);
             break;
         }
         case this.config.CMDS.TRADE: {
@@ -203,32 +164,6 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
             }
             break;
         }
-        case this.config.CMDS.LEVEL: {
-            const [targetUser] = args;
-            try {
-                const pt = $kv.get("PokemonTrainerDTO");
-                this.tm.updateData(pt);
-                if (!this.tm.PokemonTrainers.has(targetUser)) {
-                    Messenger.sendErrorMessage($room, "USAGE: '/level <user>' where <user> should be the name of the user who's Pokemon you level want to see.", $user.username);
-                    break;
-                }
-
-                const targetPokemon = this.tm.PokemonTrainers.get(targetUser)!.Pokemon;
-
-                if (targetPokemon.Evolves !== 0) {
-                    Messenger.sendInfoMessage($room, `${targetUser}'s ${targetPokemon.Name} is currently level ${targetPokemon.Level} and needs ${(targetPokemon.Evolves - targetPokemon.Level)} levels (or ${(targetPokemon.Evolves - targetPokemon.Level) * this.settings.level_pokemon} tokens) to evolve.`, $user.username);
-                } else if (targetPokemon.UsesStone) {
-                    Messenger.sendInfoMessage($room, `${targetUser}'s ${targetPokemon.Name} is currently level ${targetPokemon.Level} and needs a ${targetPokemon.Types[0].Stone} to evolve. ${targetUser} may type '/buystone' to purchase one!`, $user.username);
-                } else if (targetPokemon.TradeEvolve) {
-                    Messenger.sendInfoMessage($room, `${targetUser}'s ${targetPokemon.Name} is currently level ${targetPokemon.Level} and needs to be traded to evolve. Type '/trade' followed by a username to evolve them!`, $user.username);
-                } else {
-                    Messenger.sendInfoMessage($room, `${targetUser}'s ${targetPokemon.Name} is currently level ${targetPokemon.Level} This Pokemon does not evolve.`, $user.username);
-                }
-            } catch (err) {
-                Messenger.sendErrorMessage($room, "Could not get the level of " + targetUser + "'s Pokemon. Please check the spelling or verify they have caught a Pokemon. " + err);
-            }
-            break;
-        }
         case this.config.CMDS.ATTACK: {
             const [targetUser] = args;
             const pt = $kv.get("PokemonTrainerDTO");
@@ -266,27 +201,27 @@ export function userCommands(this: Game, command, args, $user: User, $room : Roo
                     } else {
                         const move = this.tm.PokemonTrainers.get($user.username)!.Pokemon.Move;
                         const currentHP = this.tm.PokemonTrainers.get(targetUser)!.Pokemon.Life;
-                        const leftHP = this.tm.PokemonTrainers.get($user.username)!.Pokemon.Attack(this.tm.PokemonTrainers.get(targetUser)!.Pokemon);
+                        const damage = this.tm.PokemonTrainers.get($user.username)!.Pokemon.Attack(this.tm.PokemonTrainers.get(targetUser)!.Pokemon);
 
                         if (this.settings.public_fights !== true) {
                             Messenger.sendSuccessMessage($room, "Your Pokemon now fights with your foe's Pokemon! Wish em luck!", $user.username);
                             Messenger.sendErrorMessage($room, `Your Pokemon is being attacked by ${$user.username}'s Pokemon! Wish em luck!`, targetUser);
-                            Messenger.sendInfoMessage($room, `Dealt ${currentHP - leftHP} Points of Damage. Using ${move.Name}`, $user.username);
-                            Messenger.sendInfoMessage($room, `Received ${currentHP - leftHP} Points of Damage. Using ${move.Name}`, targetUser);
+                            Messenger.sendInfoMessage($room, `Dealt ${damage} Points of Damage. Using ${move.Name}`, $user.username);
+                            Messenger.sendInfoMessage($room, `Received ${damage} Points of Damage. Using ${move.Name}`, targetUser);
                         }
-
+                        const leftHP = currentHP - damage;
                         if (leftHP <= 0) {
                             if (this.settings.public_fights === true) {
-                                Messenger.sendSuccessMessage($room, `${$user.username} successfully defeated ${targetUser} (dealt ${currentHP - leftHP} damage, using ${move.Name})`);
+                                Messenger.sendSuccessMessage($room, `${$user.username} successfully defeated ${targetUser} (dealt ${damage} damage, using ${move.Name})`);
                             } else {
                                 Messenger.sendSuccessMessage($room, "Your Pokemon defeated your foe's Pokemon, congrats! Your pokemon levels up!", $user.username);
                                 Messenger.sendErrorMessage($room, "Your Pokemon sadly lost all its life points in the battle. It is fainted. You can revive or release it. :(", targetUser);
                             }
 
-                            this.tm.LevelUpPokemonOfUser($user.username, $room, 2);
+                            this.tm.LevelUpPokemonOfUser($user.username, $room, 1);
                         } else {
                             if (this.settings.public_fights === true) {
-                                Messenger.sendInfoMessage($room, `${$user.username} attacked ${targetUser} (dealt ${currentHP - leftHP} damage, using ${move.Name}, ${leftHP} HP left)`);
+                                Messenger.sendInfoMessage($room, `${$user.username} attacked ${targetUser} (dealt ${damage} damage, using ${move.Name}, ${leftHP} HP left)`);
                             }
 
                             Messenger.sendErrorMessage($room, `Your Pokemon fought hard, but couldn't beat your foe. Tho it is hurt... It has ${leftHP} HP left.`, $user.username);

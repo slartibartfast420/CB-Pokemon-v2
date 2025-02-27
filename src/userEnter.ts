@@ -10,3 +10,6 @@ import {game} from "./sharedCode";
 /** React when a user enters the room. */
 game.refresh($kv, $settings);
 game.sendWelcomeMessage($user, $room, $kv);
+if($settings.fanclub_auto_catch && $user.inFanclub){
+    $room.sendNotice("You can use /getnewpkmn to get a new free pokemon.", { toUsername: $user.username, fontWeight: "bold"});
+}
