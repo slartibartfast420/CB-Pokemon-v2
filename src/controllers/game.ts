@@ -291,7 +291,7 @@ export default class Game {
         if (!this.tm.PokemonTrainers.has($user.username) && this.settings.catch_pokemon <= $tip.tokens) {
             this.tm.AddPokemonToTrainer(PokeDex.GetRandomPokemon(this.settings, $tip.tokens), $user.username, $tip.tokens);
             const trainer = this.tm.PokemonTrainers.get($user.username)!;
-            Messenger.sendInfoMessage($room, `You successfully caught a ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name}, congrats! Treat it well, fellow trainer.`);
+            Messenger.sendInfoMessage($room, `${$user.username} successfully caught a ${PokeDex.GetPokemonIcon(trainer.Pokemon)} ${trainer.Pokemon.Name}, congrats!`);
         } else if (this.tm.PokemonTrainers.has($user.username)) {
             const trainer = this.tm.PokemonTrainers.get($user.username)!;
             if ($tip.tokens === this.settings.move_price) {
